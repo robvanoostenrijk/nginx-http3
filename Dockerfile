@@ -120,6 +120,11 @@ RUN set -x \
       --enable-static; fi \
   && if [ "${SSL_LIBRARY}" = "libressl" ]; then make -j$(getconf _NPROCESSORS_ONLN) install; fi \
 #
+# zlib-cloudflare
+#
+  && cd /usr/src/zlib \
+  && ./configure --static
+#
 # nginx-quic
 #
 RUN  set -x \
