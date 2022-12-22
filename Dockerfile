@@ -6,8 +6,8 @@ FROM alpine:edge AS builder
 ARG SSL_LIBRARY=openssl
 
 ENV OPENSSL_QUIC_TAG=openssl-3.0.7+quic1 \
-    CLOUDFLARE_ZLIB_COMMIT=885674026394870b7e7a05b7bf1ec5eb7bd8a9c0 \
     LIBRESSL_TAG=v3.6.1 \
+    CLOUDFLARE_ZLIB_COMMIT=885674026394870b7e7a05b7bf1ec5eb7bd8a9c0 \
     MODULE_NGINX_HEADERS_MORE=v0.34 \
     MODULE_NGINX_ECHO=v0.63 \
     MODULE_NGINX_FANCYINDEX=v0.5.2 \
@@ -50,7 +50,7 @@ RUN set -x \
   && mkdir /usr/src/libressl \
   && curl --location https://github.com/libressl-portable/portable/archive/refs/tags/${LIBRESSL_TAG}.tar.gz | tar xz -C /usr/src/libressl --strip-components=1 \
 #
-#	Cloudflare enhanced zlib
+# Cloudflare enhanced zlib
 #
   && mkdir -p /usr/src/zlib \
   && curl --location https://api.github.com/repos/cloudflare/zlib/tarball/${CLOUDFLARE_ZLIB_COMMIT} | tar xz -C /usr/src/zlib --strip-components=1 \
@@ -84,11 +84,6 @@ RUN set -x \
   && mkdir -p /usr/src/nginx_cookie_flag_module \
   && curl --location https://github.com/AirisX/nginx_cookie_flag_module/archive/refs/tags/${MODULE_NGINX_COOKIE_FLAG}.tar.gz | tar xz -C /usr/src/nginx_cookie_flag_module --strip-components=1 \
 #
-# Module: nginx_cookie_flag_module
-#
-  && mkdir -p /usr/src/nginx_cookie_flag_module \
-  && curl --location https://github.com/AirisX/nginx_cookie_flag_module/archive/refs/tags/${MODULE_NGINX_COOKIE_FLAG}.tar.gz | tar xz -C /usr/src/nginx_cookie_flag_module --strip-components=1 \
-#
 # Module: ngx_http_substitutions_filter_module
 #
   && mkdir -p /usr/src/ngx_http_substitutions_filter_module \
@@ -113,7 +108,7 @@ RUN set -x \
 #
   && cd /usr/src/openssl \
   && if [ "${SSL_LIBRARY}" = "openssl" ]; then ./Configure no-shared no-tests linux-generic64; fi \
-  && if [ "${SSL_LIBRARY}" = "openssl" ]; then make -j$(getconf _NPROCESSORS_ONLN) && make install; fi \
+  && if [ "${SSL_LIBRARY}" = "openssl" ]; then make -j$(getconf _NPROCESSORS_ONLN) && make install_sw; fi \
 #
 # LibreSSL
 #
@@ -125,11 +120,6 @@ RUN set -x \
       --enable-static; fi \
   && if [ "${SSL_LIBRARY}" = "libressl" ]; then make -j$(getconf _NPROCESSORS_ONLN) install; fi \
 #
-#	zlib-cloudflare
-#
-  && cd /usr/src/zlib \
-  && ./configure --static
-#
 # nginx-quic
 #
 RUN  set -x \
@@ -137,12 +127,6 @@ RUN  set -x \
   && patch -p1 < /usr/src/nginx.patch \
   && CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
      --build="nginx-http3-$(date -u +'%Y-%m-%dT%H:%M:%SZ') ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
-     --with-cc-opt="-O3 -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable" \
-     --with-ld-opt="-w -s" \
-     --with-zlib=/usr/src/zlib \
-     --with-zlib-asm=CPU \
-     --with-zlib-opt="-O3" \
-     --with-pcre-opt="-O3" \
      --prefix=/var/lib/nginx \
      --sbin-path=/usr/sbin/nginx \
      --modules-path=/usr/lib/nginx/modules \
@@ -156,37 +140,43 @@ RUN  set -x \
      --http-scgi-temp-path=/var/lib/nginx/tmp/scgi \
      --user=nginx \
      --group=nginx \
-     --with-pcre-jit \
-     --with-http_ssl_module \
-     --with-http_realip_module \
-     --with-http_addition_module \
-     --with-http_sub_module \
-     --with-http_gunzip_module \
-     --with-http_gzip_static_module \
-     --with-http_stub_status_module \
-     --with-http_auth_request_module \
-     --with-threads \
-     --with-http_slice_module \
+     --with-cc-opt="-O3 -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable" \
      --with-compat \
      --with-file-aio \
-     --with-http_v2_module \
+     --with-http_addition_module \
+     --with-http_auth_request_module \
+     --with-http_gunzip_module \
+     --with-http_gzip_static_module \
+     --with-http_realip_module \
+     --with-http_slice_module \
+     --with-http_ssl_module \
+     --with-http_stub_status_module \
+     --with-http_sub_module \
      --with-http_v2_hpack_enc \
+     --with-http_v2_module \
      --with-http_v3_module \
-     --add-module=/usr/src/ngx_brotli \
-     --add-module=/usr/src/headers-more-nginx-module \
-     --add-module=/usr/src/echo-nginx-module \
-     --add-module=/usr/src/njs/nginx \
-     --add-module=/usr/src/nginx_cookie_flag_module \
-     --add-module=/usr/src/ngx-fancyindex \
-     --add-module=/usr/src/nginx-module-vts \
-     --add-module=/usr/src/ngx_http_substitutions_filter_module \
-     --with-select_module \
+     --with-ld-opt="-w -s" \
+     --with-pcre-jit \
+     --with-pcre-opt="-O3" \
      --with-poll_module \
+     --with-select_module \
+     --with-threads \
+     --with-zlib-asm=CPU \
+     --with-zlib-opt="-O3" \
+     --with-zlib=/usr/src/zlib \
+     --add-module=/usr/src/echo-nginx-module \
+     --add-module=/usr/src/headers-more-nginx-module \
+     --add-module=/usr/src/nginx_cookie_flag_module \
+     --add-module=/usr/src/nginx-module-vts \
+     --add-module=/usr/src/ngx_brotli \
+     --add-module=/usr/src/ngx_http_substitutions_filter_module \
+     --add-module=/usr/src/ngx-fancyindex \
+     --add-module=/usr/src/njs/nginx \
+     --without-http_browser_module \
      --without-http_grpc_module \
+     --without-http_mirror_module \
      --without-http_scgi_module \
      --without-http_uwsgi_module \
-     --without-http_mirror_module \
-     --without-http_browser_module \
   && make -j$(getconf _NPROCESSORS_ONLN) \
   && make -j$(getconf _NPROCESSORS_ONLN) install \
   && rm -rf /etc/nginx/html/ \
