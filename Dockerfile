@@ -1,9 +1,9 @@
 ##################################################
 # Nginx with Quiche (HTTP/3), Brotli, Headers More
 ##################################################
-FROM alpine:edge AS builder
+FROM alpine:latest
 
-ARG SSL_LIBRARY=openssl
+ARG SSL_LIBRARY
 
 ENV OPENSSL_QUIC_TAG=openssl-3.0.7+quic1 \
     LIBRESSL_TAG=v3.6.1 \

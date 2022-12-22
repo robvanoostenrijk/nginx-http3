@@ -4,14 +4,13 @@ clean:
 	LOCALLY
 	RUN rm -f -R ./dist
 
-openssl:
-	FROM DOCKERFILE . --SSL_LIBRARY=openssl
-
-libressl:
-	FROM DOCKERFILE . --SSL_LIBRARY=libressl
+build:
+	ARG --required SSL_LIBRARY
+	FROM DOCKERFILE . --SSL_LIBRARY=$SSL_LIBRARY
 
 package:
-	FROM +build
+	ARG --required SSL_LIBRARY
+	FROM +build --SSL_LIBRARY=$SSL_LIBRARY
 
 	RUN set -x \
 &&		mkdir -p /build/dist \
@@ -20,5 +19,7 @@ package:
 	SAVE ARTIFACT /build/dist/nginx-http3.tar.xz AS LOCAL ./dist/nginx-http3.tar.xz
 
 all:
+	ARG SSL_LIBRARY=openssl
+
 	BUILD +clean
-	BUILD +openssl
+	BUILD +package --SSL_LIBRARY=$SSL_LIBRARY
