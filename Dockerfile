@@ -3,7 +3,7 @@
 ##################################################
 FROM alpine:edge AS builder
 
-ARG SSL_LIBRARY
+ARG SSL_LIBRARY=openssl
 
 ENV OPENSSL_QUIC_TAG=openssl-3.0.7+quic1 \
     CLOUDFLARE_ZLIB_COMMIT=885674026394870b7e7a05b7bf1ec5eb7bd8a9c0 \
