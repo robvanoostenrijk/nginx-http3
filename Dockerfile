@@ -7,6 +7,7 @@ ARG SSL_LIBRARY
 
 ENV OPENSSL_QUIC_TAG=openssl-3.0.7+quic1 \
     LIBRESSL_TAG=v3.6.1 \
+    BORINGSSL_TAG=master \
     CLOUDFLARE_ZLIB_COMMIT=885674026394870b7e7a05b7bf1ec5eb7bd8a9c0 \
     MODULE_NGINX_HEADERS_MORE=v0.34 \
     MODULE_NGINX_ECHO=v0.63 \
@@ -18,6 +19,7 @@ ENV OPENSSL_QUIC_TAG=openssl-3.0.7+quic1 \
 COPY ["nginx.patch", "/usr/src/nginx.patch"]
 
 RUN set -x \
+  && echo "Compiling for SSL_LIBRARY: ${SSL_LIBRARY}" \
   && addgroup -S nginx \
   && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
   && apk update \
@@ -26,19 +28,20 @@ RUN set -x \
   && apk add --no-cache --virtual .build-deps \
   clang \
   curl \
+  linux-headers \
   make \
   pcre2-dev \
-  linux-headers \
   && apk add --no-cache --virtual .brotli-build-deps \
   autoconf \
-  libtool \
   automake \
-  git \
-  cmake \
-  go \
-  rust \
   cargo \
+  cmake \
+  git \
+  go \
+  libtool \
+  samurai \
   patch \
+  rust \
 #
 # OpenSSL library (with QUIC support)
 #
@@ -49,6 +52,11 @@ RUN set -x \
 #
   && mkdir /usr/src/libressl \
   && curl --location https://github.com/libressl-portable/portable/archive/refs/tags/${LIBRESSL_TAG}.tar.gz | tar xz -C /usr/src/libressl --strip-components=1 \
+#
+# BoringSSL
+#
+  && mkdir /usr/src/boringssl \
+  && curl --location https://github.com/google/boringssl/archive/refs/heads/${BORINGSSL_TAG}.tar.gz | tar xz -C /usr/src/boringssl --strip-components=1 \
 #
 # Cloudflare enhanced zlib
 #
@@ -114,20 +122,29 @@ RUN set -x \
 #
   && cd /usr/src/libressl \
   && if [ "${SSL_LIBRARY}" = "libressl" ]; then ./autogen.sh; fi \
-  && if [ "${SSL_LIBRARY}" = "libressl" ]; then CC=/usr/bin/clang CXX=/usr/bin/clang++ ./configure \
+  && if [ "${SSL_LIBRARY}" = "libressl" ]; then CC=clang CXX=clang++ ./configure \
       --disable-shared \
       --disable-tests \
       --enable-static; fi \
   && if [ "${SSL_LIBRARY}" = "libressl" ]; then make -j$(getconf _NPROCESSORS_ONLN) install; fi \
 #
+# BoringSSL
+#
+  && cd /usr/src/boringssl \
+  && if [ "${SSL_LIBRARY}" = "boringssl" ]; then mkdir -p .openssl/lib .openssl/include; fi \
+  && if [ "${SSL_LIBRARY}" = "boringssl" ]; then ln -sf /usr/src/boringssl/include/openssl /usr/src/boringssl/.openssl/include/openssl; fi \
+  && if [ "${SSL_LIBRARY}" = "boringssl" ]; then touch /usr/src/boringssl/.openssl/include/openssl/ssl.h; fi \
+  && if [ "${SSL_LIBRARY}" = "boringssl" ]; then CC=clang CXX=clang++ cmake -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo .; fi \
+  && if [ "${SSL_LIBRARY}" = "boringssl" ]; then ninja; fi \
+  && if [ "${SSL_LIBRARY}" = "boringssl" ]; then cp crypto/libcrypto.a ssl/libssl.a .openssl/lib; fi \
+#
 # zlib-cloudflare
 #
   && cd /usr/src/zlib \
-  && ./configure --static
+  && ./configure --static \
 #
 # nginx-quic
 #
-RUN  set -x \
   && cd /usr/src/nginx-quic \
   && patch -p1 < /usr/src/nginx.patch \
   && CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
@@ -145,7 +162,7 @@ RUN  set -x \
      --http-scgi-temp-path=/var/lib/nginx/tmp/scgi \
      --user=nginx \
      --group=nginx \
-     --with-cc-opt="-O3 -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable" \
+     --with-cc-opt="-O3 -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable -I/usr/src/boringssl/.openssl/include" \
      --with-compat \
      --with-file-aio \
      --with-http_addition_module \
@@ -160,7 +177,7 @@ RUN  set -x \
      --with-http_v2_hpack_enc \
      --with-http_v2_module \
      --with-http_v3_module \
-     --with-ld-opt="-w -s" \
+     --with-ld-opt="-w -s -L/usr/src/boringssl/.openssl/lib" \
      --with-pcre-jit \
      --with-pcre-opt="-O3" \
      --with-poll_module \
