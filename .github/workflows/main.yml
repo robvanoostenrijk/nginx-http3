@@ -36,5 +36,6 @@ jobs:
           echo VERSION=$VERSION
           # Build and Publish container image
           docker buildx build --push \
+          --build-arg SSL_LIBRARY=boringssl \
           --tag $IMAGE_ID:$VERSION \
           --platform linux/amd64,linux/arm64 .
