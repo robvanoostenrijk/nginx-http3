@@ -9,17 +9,19 @@ build:
 	FROM DOCKERFILE . --SSL_LIBRARY=$SSL_LIBRARY
 
 package:
+	ARG --required PLATFORM
 	ARG --required SSL_LIBRARY
 	FROM +build --SSL_LIBRARY=$SSL_LIBRARY
 
 	RUN set -x \
-&&		mkdir -p /build/dist \
-&&		XZ_OPT=-9 tar -C /usr/sbin -Jcvf /build/dist/nginx-http3.tar.xz nginx
+&&		mkdir -p /tmp/dist \
+&&		tar -C /usr/sbin -zcvf /tmp/dist/nginx-http3.tar.gz nginx
 
-	SAVE ARTIFACT /build/dist/nginx-http3.tar.xz AS LOCAL ./dist/nginx-http3.tar.xz
+	SAVE ARTIFACT /tmp/dist/nginx-http3.tar.gz AS LOCAL ./dist/nginx-http3-${PLATFORM}.tar.gz
 
 all:
-	ARG SSL_LIBRARY=openssl
+	ARG SSL_LIBRARY=boringssl
 
 	BUILD +clean
-	BUILD +package --SSL_LIBRARY=$SSL_LIBRARY
+	BUILD --platform=linux/amd64 +package --PLATFORM=amd64 --SSL_LIBRARY=$SSL_LIBRARY
+	BUILD --platform=linux/arm64 +package --PLATFORM=arm64 --SSL_LIBRARY=$SSL_LIBRARY
