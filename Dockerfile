@@ -1,20 +1,21 @@
 ##################################################
 # Nginx with Quiche (HTTP/3), Brotli, Headers More
 ##################################################
-FROM alpine:latest
+FROM alpine:latest AS builder
 
 ARG SSL_LIBRARY
 
 ENV OPENSSL_QUIC_TAG=openssl-3.0.7+quic1 \
     LIBRESSL_TAG=v3.6.1 \
-    BORINGSSL_TAG=master \
+    BORINGSSL_COMMIT=01d195bd03bfff54dc99c0df0858197c71d35417 \
     CLOUDFLARE_ZLIB_COMMIT=885674026394870b7e7a05b7bf1ec5eb7bd8a9c0 \
     MODULE_NGINX_HEADERS_MORE=v0.34 \
     MODULE_NGINX_ECHO=v0.63 \
     MODULE_NGINX_FANCYINDEX=v0.5.2 \
     MODULE_NGINX_VTS=v0.2.1 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
-    MODULE_NGINX_NJS=0.7.9
+    MODULE_NGINX_NJS=0.7.9 \
+    NGINX_QUIC_COMMIT=987bee4363d1
 
 COPY ["nginx.patch", "/usr/src/nginx.patch"]
 
@@ -24,7 +25,7 @@ RUN set -x \
   && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
   && apk update \
   && apk upgrade \
-  && apk add --no-cache ca-certificates xz \
+  && apk add --no-cache ca-certificates openssl xz \
   && apk add --no-cache --virtual .build-deps \
   clang \
   curl \
@@ -46,17 +47,17 @@ RUN set -x \
 # OpenSSL library (with QUIC support)
 #
   && mkdir -p /usr/src/openssl \
-  && curl --location https://github.com/quictls/openssl/archive/refs/tags/${OPENSSL_QUIC_TAG}.tar.gz | tar xz -C /usr/src/openssl --strip-components=1 \
+  && if [ "${SSL_LIBRARY}" = "openssl" ]; then curl --location https://github.com/quictls/openssl/archive/refs/tags/${OPENSSL_QUIC_TAG}.tar.gz | tar xz -C /usr/src/openssl --strip-components=1; fi \
 #
 # LibreSSL
 #
   && mkdir /usr/src/libressl \
-  && curl --location https://github.com/libressl-portable/portable/archive/refs/tags/${LIBRESSL_TAG}.tar.gz | tar xz -C /usr/src/libressl --strip-components=1 \
+  && if [ "${SSL_LIBRARY}" = "libressl" ]; then curl --location https://github.com/libressl-portable/portable/archive/refs/tags/${LIBRESSL_TAG}.tar.gz | tar xz -C /usr/src/libressl --strip-components=1; fi \
 #
 # BoringSSL
 #
   && mkdir /usr/src/boringssl \
-  && curl --location https://github.com/google/boringssl/archive/refs/heads/${BORINGSSL_TAG}.tar.gz | tar xz -C /usr/src/boringssl --strip-components=1 \
+  && if [ "${SSL_LIBRARY}" = "boringssl" ]; then curl --location https://api.github.com/repos/google/boringssl/tarball/${BORINGSSL_COMMIT} | tar xz -C /usr/src/boringssl --strip-components=1; fi \
 #
 # Cloudflare enhanced zlib
 #
@@ -105,7 +106,7 @@ RUN set -x \
 # nginx QUIC branch
 #
   && mkdir -p /usr/src/nginx-quic \
-  && curl --location https://hg.nginx.org/nginx-quic/archive/quic.tar.gz | tar xz -C /usr/src/nginx-quic --strip-components=1 \
+  && curl --location https://hg.nginx.org/nginx-quic/archive/${NGINX_QUIC_COMMIT}.tar.gz | tar xz -C /usr/src/nginx-quic --strip-components=1 \
 #
 # brotli cargo compile settings
 #
@@ -117,6 +118,7 @@ RUN set -x \
   && cd /usr/src/openssl \
   && if [ "${SSL_LIBRARY}" = "openssl" ]; then ./Configure no-shared no-tests linux-generic64; fi \
   && if [ "${SSL_LIBRARY}" = "openssl" ]; then make -j$(getconf _NPROCESSORS_ONLN) && make install_sw; fi \
+  && if [ "${SSL_LIBRARY}" = "openssl" ]; then SSL_COMMIT="openssl+quic1-${OPENSSL_QUIC_TAG}"; fi \
 #
 # LibreSSL
 #
@@ -127,6 +129,7 @@ RUN set -x \
       --disable-tests \
       --enable-static; fi \
   && if [ "${SSL_LIBRARY}" = "libressl" ]; then make -j$(getconf _NPROCESSORS_ONLN) install; fi \
+  && if [ "${SSL_LIBRARY}" = "libressl" ]; then SSL_COMMIT="libressl-${LIBRESSL_TAG}"; fi \
 #
 # BoringSSL
 #
@@ -137,6 +140,7 @@ RUN set -x \
   && if [ "${SSL_LIBRARY}" = "boringssl" ]; then CC=clang CXX=clang++ cmake -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo .; fi \
   && if [ "${SSL_LIBRARY}" = "boringssl" ]; then ninja; fi \
   && if [ "${SSL_LIBRARY}" = "boringssl" ]; then cp crypto/libcrypto.a ssl/libssl.a .openssl/lib; fi \
+  && if [ "${SSL_LIBRARY}" = "boringssl" ]; then SSL_COMMIT="boringssl-${BORINGSSL_COMMIT:0:7}"; fi \
 #
 # zlib-cloudflare
 #
@@ -148,7 +152,7 @@ RUN set -x \
   && cd /usr/src/nginx-quic \
   && patch -p1 < /usr/src/nginx.patch \
   && CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
-     --build="nginx-http3-$(date -u +'%Y-%m-%dT%H:%M:%SZ') ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
+     --build="nginx-http3-${NGINX_QUIC_COMMIT} ${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
      --prefix=/var/lib/nginx \
      --sbin-path=/usr/sbin/nginx \
      --modules-path=/usr/lib/nginx/modules \
@@ -162,7 +166,7 @@ RUN set -x \
      --http-scgi-temp-path=/var/lib/nginx/tmp/scgi \
      --user=nginx \
      --group=nginx \
-     --with-cc-opt="-O3 -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable -I/usr/src/boringssl/.openssl/include" \
+     --with-cc-opt="-O3 -static -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable -I/usr/src/boringssl/.openssl/include" \
      --with-compat \
      --with-file-aio \
      --with-http_addition_module \
@@ -177,7 +181,7 @@ RUN set -x \
      --with-http_v2_hpack_enc \
      --with-http_v2_module \
      --with-http_v3_module \
-     --with-ld-opt="-w -s -L/usr/src/boringssl/.openssl/lib" \
+     --with-ld-opt="-w -s -L/usr/src/boringssl/.openssl/lib -static" \
      --with-pcre-jit \
      --with-pcre-opt="-O3" \
      --with-poll_module \
@@ -201,22 +205,40 @@ RUN set -x \
      --without-http_uwsgi_module \
   && make -j$(getconf _NPROCESSORS_ONLN) \
   && make -j$(getconf _NPROCESSORS_ONLN) install \
-  && rm -rf /etc/nginx/html/ \
-  && mkdir /etc/nginx/conf.d/ \
-  && mkdir -p /usr/share/nginx/html/ \
-  && ln -s /usr/lib/nginx/modules /etc/nginx/modules \
-  && strip /usr/sbin/nginx* \
-  && rm -rf /etc/nginx/*.default /etc/nginx/*.so \
-  && rm -rf /usr/src \
-  && runDeps="$( \
-  scanelf --needed --nobanner /usr/sbin/nginx /usr/lib/nginx/modules/*.so \
-  | awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
-  | sort -u \
-  | xargs -r apk info --installed \
-  | sort -u \
-  )" \
-  && apk add --no-cache --virtual .nginx-rundeps $runDeps \
+# Create /build distribution folder
+  && mkdir -p /build /build/etc/ssl/private /build/usr/sbin /build/var/run/nginx /build/etc/nginx/conf.d /build/var/lib/nginx/html /build/var/lib/nginx/logs /build/var/lib/nginx/tmp \
+  && cp /usr/sbin/nginx /build/usr/sbin/ \
+  && cp -r /etc/nginx/* /build/etc/nginx \
+  && cp -r /usr/src/nginx-quic/docs/html /build/var/lib/nginx \
+# Create self-signed certificate
+  && openssl req -x509 -newkey rsa:4096 -nodes -keyout /build/etc/ssl/private/localhost.key -out /build/etc/ssl/localhost.pem -days 365 -sha256 -subj '/CN=localhost' \
+  && chown 1000:1000 /build/etc/ssl/private/localhost.key /build/var/run/nginx /build/var/lib/nginx/logs /build/var/lib/nginx/tmp \
+#
+# Mozilla CA cert bundle
+#
+  && curl --location --compressed --output /build/etc/ssl/cacert.pem https://curl.haxx.se/ca/cacert.pem \
+  && curl --location --compressed --output /build/etc/ssl/cacert.pem.sha256 https://curl.haxx.se/ca/cacert.pem.sha256 \
+  && cd /build/etc/ssl \
+  && sha256sum -c /build/etc/ssl/cacert.pem.sha256 \
+  && rm /build/etc/ssl/cacert.pem.sha256 \
+# Clean up
   && apk del .brotli-build-deps \
   && apk del .build-deps \
   && rm -rf /root/.cargo \
-  && rm -rf /var/cache/apk/*
+  && rm -rf /var/cache/apk/* \
+  && rm -rf /usr/src
+
+FROM busybox
+
+RUN set -x \
+  && echo "nginx:x:1000:1000:nginx:/bin:/bin/false" >> /etc/passwd \
+  && echo "nginx:x:1000:" >> /etc/group
+
+COPY --from=builder /build /
+COPY ["include", "/"]
+
+EXPOSE 80/tcp 443/tcp 443/udp
+
+USER nginx
+ENTRYPOINT ["/usr/sbin/nginx"]
+CMD ["-g", "daemon off;"]
