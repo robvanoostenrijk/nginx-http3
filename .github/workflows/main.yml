@@ -10,20 +10,20 @@ jobs:
     if: github.event_name == 'push'
 
     steps:
-      - name: checkout
+      - name: Checkout from GitHub
+        id: checkout
         uses: actions/checkout@v3
-
-      - name: Set up QEMU
+      - name: Setup qemu
+        id: setup-qemu
         uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker Buildx
-        id: buildx
+      - name: Setup Docker Buildx
+        id: setup-buildx
         uses: docker/setup-buildx-action@v2
-
       - name: Log-in to ghcr.io
+        id: ghcr-login
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build and push container image
+      - name: Determine Image ID and Version
+        id: image-id
         run: |
           IMAGE_ID=$(echo ghcr.io/${{ github.repository }} | tr '[A-Z]' '[a-z]')
           # Strip git ref prefix from version
@@ -32,6 +32,11 @@ jobs:
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
           # when the branch is main, replace main with latest
           [ "$VERSION" == "main" ] && VERSION=latest
+          echo "IMAGE_ID=${IMAGE_ID}" >> $GITHUB_ENV
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Build and push container image
+        id: image-build
+        run: |
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
           # Build and Publish container image
@@ -39,3 +44,14 @@ jobs:
           --build-arg SSL_LIBRARY=boringssl \
           --tag $IMAGE_ID:$VERSION \
           --platform linux/amd64,linux/arm64 .
+      - name: Extract docker build artifacts
+        uses: shrink/actions-docker-extract@v2
+        id: extract
+        with:
+          image: $IMAGE_ID:$VERSION
+          path: /usr/sbin/nginx
+      - name: Upload Dist
+        uses: actions/upload-artifact@v2
+        with:
+          path: ${{ steps.extract.outputs.destination }}
+          name: dist
