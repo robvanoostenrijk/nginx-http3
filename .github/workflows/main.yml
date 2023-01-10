@@ -1,11 +1,12 @@
-name: Build and publish container
+name: Build container(s) & Upload Artifacts
 
 on:
   push:
-    branches: [main]
+    tags:
+      - '*'
 
 jobs:
-  ghr_push:
+  build-container-and-deploy:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
 
@@ -36,7 +37,6 @@ jobs:
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
       - name: Build and push container image
         id: image_build
-        if: ${{ false }}
         run: |
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
