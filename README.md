@@ -1,5 +1,5 @@
 # nginx-http3
-[![Build and publish container](https://github.com/robvanoostenrijk/nginx-http3/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/robvanoostenrijk/nginx-http3/actions/workflows/main.yml)
+[![Build and publish container](https://github.com/robvanoostenrijk/nginx-http3/actions/workflows/main.yml/badge.svg)](https://github.com/robvanoostenrijk/nginx-http3/actions/workflows/main.yml)
 
 Static compiled [nginx-quic](https://hg.nginx.org/nginx-quic) (HTTP/3 support), with the option to compile against different SSL libraries supporting quick.
 
