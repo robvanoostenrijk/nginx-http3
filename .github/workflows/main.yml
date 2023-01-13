@@ -39,7 +39,7 @@ jobs:
           # when the branch is main, replace main with latest
           [ "$VERSION" == "main" ] && VERSION=latest
           echo "IMAGE_ID=${IMAGE_ID}" >> $GITHUB_ENV
-          echo "VERSION=${{ matrix.library }}${VERSION}" >> $GITHUB_ENV
+          echo "VERSION=${{ matrix.library }}-${VERSION}" >> $GITHUB_ENV
       - name: Build and push container image
         id: image_build
         run: |
