@@ -52,7 +52,7 @@ jobs:
       - name: Extract docker build artifacts
         id: extract_artifacts
         run: |
-          ./extract-artifacts.sh $IMAGE_ID $VERSION
+          ./extract-artifacts.sh $IMAGE_ID $VERSION ${{ matrix.library }}
       - name: Release
         uses: softprops/action-gh-release@v1
         with:

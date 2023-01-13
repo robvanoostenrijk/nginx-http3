@@ -2,6 +2,7 @@
 
 IMAGE=$1
 VERSION=$2
+LIBRARY=$3
 
 echo "[i] Clean dist folder"
 rm -f -R ./dist
@@ -16,7 +17,7 @@ do
     docker cp "${CONTAINER}:/usr/sbin/nginx" ./dist/nginx
 
     echo "[i] Create distribution archive"
-    XZ_OPT=-9 tar -C ./dist -Jcvf ./dist/nginx-http3-${PLATFORM/\//-}.tar.xz nginx
+    XZ_OPT=-9 tar -C ./dist -Jcvf ./dist/nginx-http3-${LIBRARY}-${PLATFORM/\//-}.tar.xz nginx
 
     echo "[i] Removing container ${CONTAINER:0:12}"
     docker rm $CONTAINER
