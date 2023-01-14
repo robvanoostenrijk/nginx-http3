@@ -45,29 +45,27 @@ apk add --no-cache --virtual .brotli-build-deps \
   samurai \
   patch \
   rust
+
+mkdir -p /usr/src
 #
 # OpenSSL library (with QUIC support)
 #
-mkdir -p /usr/src/openssl
-if [ "${SSL_LIBRARY}" = "openssl" ]; then curl --location https://github.com/quictls/openssl/archive/refs/tags/${OPENSSL_QUIC_TAG}.tar.gz | tar xz -C /usr/src/openssl --strip-components=1; fi
+if [ "${SSL_LIBRARY}" = "openssl" ]; then curl --location https://github.com/quictls/openssl/archive/refs/tags/${OPENSSL_QUIC_TAG}.tar.gz | tar xz -C /usr/src --one-top-level=openssl --strip-components=1; fi
 
 #
 # LibreSSL
 #
-mkdir /usr/src/libressl
-if [ "${SSL_LIBRARY}" = "libressl" ]; then curl --location https://github.com/libressl-portable/portable/archive/refs/tags/${LIBRESSL_TAG}.tar.gz | tar xz -C /usr/src/libressl --strip-components=1; fi
+if [ "${SSL_LIBRARY}" = "libressl" ]; then curl --location https://github.com/libressl-portable/portable/archive/refs/tags/${LIBRESSL_TAG}.tar.gz | tar xz -C /usr/src --one-top-level=libressl --strip-components=1; fi
 
 #
 # BoringSSL
 #
-mkdir /usr/src/boringssl
-if [ "${SSL_LIBRARY}" = "boringssl" ]; then curl --location https://api.github.com/repos/google/boringssl/tarball/${BORINGSSL_COMMIT} | tar xz -C /usr/src/boringssl --strip-components=1; fi
+if [ "${SSL_LIBRARY}" = "boringssl" ]; then curl --location https://api.github.com/repos/google/boringssl/tarball/${BORINGSSL_COMMIT} | tar xz -C /usr/src --one-top-level=boringssl --strip-components=1; fi
 
 #
 # Cloudflare enhanced zlib
 #
-mkdir -p /usr/src/zlib
-curl --location https://api.github.com/repos/cloudflare/zlib/tarball/${CLOUDFLARE_ZLIB_COMMIT} | tar xz -C /usr/src/zlib --strip-components=1
+curl --location https://api.github.com/repos/cloudflare/zlib/tarball/${CLOUDFLARE_ZLIB_COMMIT} | tar xz -C /usr/src --one-top-level=zlib --strip-components=1
 
 #
 # Module: ngx_brotli
@@ -77,50 +75,42 @@ git clone --depth=1 --recursive --shallow-submodules https://github.com/google/n
 #
 # Module: headers-more-nginx-module
 #
-mkdir -p /usr/src/headers-more-nginx-module
-curl --location https://github.com/openresty/headers-more-nginx-module/archive/refs/tags/${MODULE_NGINX_HEADERS_MORE}.tar.gz | tar xz -C /usr/src/headers-more-nginx-module --strip-components=1
+curl --location https://github.com/openresty/headers-more-nginx-module/archive/refs/tags/${MODULE_NGINX_HEADERS_MORE}.tar.gz | tar xz -C /usr/src --one-top-level=headers-more-nginx-module --strip-components=1
 
 #
 # Module: echo-nginx-module
 #
-mkdir -p /usr/src/echo-nginx-module
-curl --location https://github.com/openresty/echo-nginx-module/archive/refs/tags/${MODULE_NGINX_ECHO}.tar.gz | tar xz -C /usr/src/echo-nginx-module --strip-components=1
+curl --location https://github.com/openresty/echo-nginx-module/archive/refs/tags/${MODULE_NGINX_ECHO}.tar.gz | tar xz -C /usr/src --one-top-level=echo-nginx-module --strip-components=1
 
 #
 # Module: ngx-fancyindex
 #
-mkdir -p /usr/src/ngx-fancyindex
-curl --location https://github.com/aperezdc/ngx-fancyindex/archive/refs/tags/${MODULE_NGINX_FANCYINDEX}.tar.gz | tar xz -C /usr/src/ngx-fancyindex --strip-components=1
+curl --location https://github.com/aperezdc/ngx-fancyindex/archive/refs/tags/${MODULE_NGINX_FANCYINDEX}.tar.gz | tar xz -C /usr/src --one-top-level=ngx-fancyindex --strip-components=1
 
 #
 # Module: nginx-module-vts
 #
-mkdir -p /usr/src/nginx-module-vts
-curl --location https://github.com/vozlt/nginx-module-vts/archive/refs/tags/${MODULE_NGINX_VTS}.tar.gz | tar xz -C /usr/src/nginx-module-vts --strip-components=1
+curl --location https://github.com/vozlt/nginx-module-vts/archive/refs/tags/${MODULE_NGINX_VTS}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-module-vts --strip-components=1
 
 #
 # Module: nginx_cookie_flag_module
 #
-mkdir -p /usr/src/nginx_cookie_flag_module
-curl --location https://github.com/AirisX/nginx_cookie_flag_module/archive/refs/tags/${MODULE_NGINX_COOKIE_FLAG}.tar.gz | tar xz -C /usr/src/nginx_cookie_flag_module --strip-components=1
+curl --location https://github.com/AirisX/nginx_cookie_flag_module/archive/refs/tags/${MODULE_NGINX_COOKIE_FLAG}.tar.gz | tar xz -C /usr/src --one-top-level=nginx_cookie_flag_module --strip-components=1
 
 #
 # Module: ngx_http_substitutions_filter_module
 #
-mkdir -p /usr/src/ngx_http_substitutions_filter_module
-curl --location https://github.com/yaoweibin/ngx_http_substitutions_filter_module/tarball/master | tar xz -C /usr/src/ngx_http_substitutions_filter_module --strip-components=1
+curl --location https://github.com/yaoweibin/ngx_http_substitutions_filter_module/tarball/master | tar xz -C /usr/src --one-top-level=ngx_http_substitutions_filter_module --strip-components=1
 
 #
 # Module: njs
 #
-mkdir -p /usr/src/njs
-curl --location https://github.com/nginx/njs/archive/refs/tags/${MODULE_NGINX_NJS}.tar.gz | tar xz -C /usr/src/njs --strip-components=1
+curl --location https://github.com/nginx/njs/archive/refs/tags/${MODULE_NGINX_NJS}.tar.gz | tar xz -C /usr/src --one-top-level=njs --strip-components=1
 
 #
 # nginx QUIC branch
 #
-mkdir -p /usr/src/nginx-quic
-curl --location https://hg.nginx.org/nginx-quic/archive/${NGINX_QUIC_COMMIT}.tar.gz | tar xz -C /usr/src/nginx-quic --strip-components=1
+curl --location https://hg.nginx.org/nginx-quic/archive/${NGINX_QUIC_COMMIT}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-quic --strip-components=1
 
 #
 # brotli cargo compile settings
@@ -143,13 +133,13 @@ fi
 #
 cd /usr/src/libressl
 if [ "${SSL_LIBRARY}" = "libressl" ]; then
-   ./autogen.sh
-   CC=clang CXX=clang++ ./configure \
-      --disable-shared \
-      --disable-tests \
-      --enable-static
-    make -j$(getconf _NPROCESSORS_ONLN) install
-    SSL_COMMIT="libressl-${LIBRESSL_TAG}"
+  ./autogen.sh
+  CC=clang CXX=clang++ ./configure \
+    --disable-shared \
+    --disable-tests \
+    --enable-static
+  make -j$(getconf _NPROCESSORS_ONLN) install
+  SSL_COMMIT="libressl-${LIBRESSL_TAG}"
 fi
 
 #
