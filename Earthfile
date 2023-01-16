@@ -7,17 +7,15 @@ clean:
 build:
 	ARG --required SSL_LIBRARY
 	FROM DOCKERFILE . --SSL_LIBRARY=$SSL_LIBRARY
+	SAVE ARTIFACT /usr/sbin/nginx
 
 package:
 	ARG --required PLATFORM
 	ARG --required SSL_LIBRARY
-	FROM +build --SSL_LIBRARY=$SSL_LIBRARY
-
-	RUN set -x \
-&&		mkdir -p /tmp/dist \
-&&		tar -C /usr/sbin -zcvf /tmp/dist/nginx-http3.tar.gz nginx
-
-	SAVE ARTIFACT /tmp/dist/nginx-http3.tar.gz AS LOCAL ./dist/nginx-http3-${PLATFORM}.tar.gz
+	LOCALLY
+	COPY +build/nginx dist/nginx
+	RUN XZ_OPT=-9 tar -C dist -Jcvf dist/nginx-http3-${SSL_LIBRARY}-${PLATFORM}.tar.xz nginx \
+	 && rm dist/nginx
 
 all:
 	ARG SSL_LIBRARY=boringssl
