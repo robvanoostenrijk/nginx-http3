@@ -17,19 +17,18 @@ jobs:
           - openssl
     steps:
       - name: Checkout from GitHub
-        id: checkout
         uses: actions/checkout@v3
       - name: Setup qemu
-        id: setup_qemu
         uses: docker/setup-qemu-action@v2
       - name: Setup Docker Buildx
-        id: setup_buildx
         uses: docker/setup-buildx-action@v2
-      - name: Log-in to ghcr.io
-        id: ghcr_login
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Determine Image ID and Version
-        id: image_id
         run: |
           IMAGE_ID=$(echo ghcr.io/${{ github.repository }} | tr '[A-Z]' '[a-z]')
           # Strip git ref prefix from version
@@ -40,17 +39,15 @@ jobs:
           [ "$VERSION" == "main" ] && VERSION=latest
           echo "IMAGE_ID=${IMAGE_ID}" >> $GITHUB_ENV
           echo "VERSION=${{ matrix.library }}-${VERSION}" >> $GITHUB_ENV
-      - name: Build and push container image
-        id: image_build
-        run: |
-          echo IMAGE_ID=$IMAGE_ID:$VERSION
-          # Build and Publish container image
-          docker buildx build --push \
-          --build-arg SSL_LIBRARY=${{ matrix.library }} \
-          --tag $IMAGE_ID:$VERSION \
-          --platform linux/amd64,linux/arm64 .
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          build-args: SSL_LIBRARY=${{ matrix.library }}
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository }}:latest,ghcr.io/${{ github.repository }}:${{ env.VERSION }}
       - name: Extract docker build artifacts
-        id: extract_artifacts
         run: |
           ./extract-artifacts.sh $IMAGE_ID $VERSION ${{ matrix.library }}
       - name: Release
