@@ -16,7 +16,7 @@ ENV OPENSSL_QUIC_TAG=openssl-3.0.7+quic1 \
     MODULE_NGINX_VTS=v0.2.1 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
     MODULE_NGINX_NJS=0.7.9 \
-    NGINX_QUIC_COMMIT=987bee4363d1
+    NGINX_QUIC_COMMIT=a954b551dc3f
 
 COPY --link ["nginx.patch", "/usr/src/nginx.patch"]
 COPY --link ["scratchfs", "/scratchfs"]
@@ -56,77 +56,77 @@ chown 1000:1000 /scratchfs/etc/ssl/private/localhost.key /scratchfs/var/run/ngin
 #
 # Mozilla CA cert bundle
 #
-curl --silent --location --compressed --output /scratchfs/etc/ssl/cacert.pem https://curl.haxx.se/ca/cacert.pem
-curl --silent --location --compressed --output /scratchfs/etc/ssl/cacert.pem.sha256 https://curl.haxx.se/ca/cacert.pem.sha256
+curl --silent --location --compressed --output /scratchfs/etc/ssl/cacert.pem https://curl.haxx.se/ca/cacert.pem || exit 1
+curl --silent --location --compressed --output /scratchfs/etc/ssl/cacert.pem.sha256 https://curl.haxx.se/ca/cacert.pem.sha256 || exit 1
 cd /scratchfs/etc/ssl
-sha256sum -c /scratchfs/etc/ssl/cacert.pem.sha256
+sha256sum -c /scratchfs/etc/ssl/cacert.pem.sha256 || exit 1
 rm /scratchfs/etc/ssl/cacert.pem.sha256
 
 mkdir -p /usr/src
 #
 # OpenSSL library (with QUIC support)
 #
-if [ "${SSL_LIBRARY}" = "openssl" ]; then curl --silent --location https://github.com/quictls/openssl/archive/refs/tags/${OPENSSL_QUIC_TAG}.tar.gz | tar xz -C /usr/src --one-top-level=openssl --strip-components=1; fi
+if [ "${SSL_LIBRARY}" = "openssl" ]; then curl --silent --location https://github.com/quictls/openssl/archive/refs/tags/${OPENSSL_QUIC_TAG}.tar.gz | tar xz -C /usr/src --one-top-level=openssl --strip-components=1 || exit 1; fi
 
 #
 # LibreSSL
 #
-if [ "${SSL_LIBRARY}" = "libressl" ]; then curl --silent --location https://github.com/libressl-portable/portable/archive/refs/tags/${LIBRESSL_TAG}.tar.gz | tar xz -C /usr/src --one-top-level=libressl --strip-components=1; fi
+if [ "${SSL_LIBRARY}" = "libressl" ]; then curl --silent --location https://github.com/libressl-portable/portable/archive/refs/tags/${LIBRESSL_TAG}.tar.gz | tar xz -C /usr/src --one-top-level=libressl --strip-components=1 || exit 1; fi
 
 #
 # BoringSSL
 #
-if [ "${SSL_LIBRARY}" = "boringssl" ]; then curl --silent --location https://api.github.com/repos/google/boringssl/tarball/${BORINGSSL_COMMIT} | tar xz -C /usr/src --one-top-level=boringssl --strip-components=1; fi
+if [ "${SSL_LIBRARY}" = "boringssl" ]; then curl --silent --location https://api.github.com/repos/google/boringssl/tarball/${BORINGSSL_COMMIT} | tar xz -C /usr/src --one-top-level=boringssl --strip-components=1 || exit 1; fi
 
 #
 # Cloudflare enhanced zlib
 #
-curl --silent --location https://api.github.com/repos/cloudflare/zlib/tarball/${CLOUDFLARE_ZLIB_COMMIT} | tar xz -C /usr/src --one-top-level=zlib --strip-components=1
+curl --silent --location https://api.github.com/repos/cloudflare/zlib/tarball/${CLOUDFLARE_ZLIB_COMMIT} | tar xz -C /usr/src --one-top-level=zlib --strip-components=1 || exit 1
 
 #
 # Module: ngx_brotli
 #
-git clone --depth=1 --recursive --shallow-submodules https://github.com/google/ngx_brotli /usr/src/ngx_brotli
+git clone --depth=1 --recursive --shallow-submodules https://github.com/google/ngx_brotli /usr/src/ngx_brotli || exit 1
 
 #
 # Module: headers-more-nginx-module
 #
-curl --silent --location https://github.com/openresty/headers-more-nginx-module/archive/refs/tags/${MODULE_NGINX_HEADERS_MORE}.tar.gz | tar xz -C /usr/src --one-top-level=headers-more-nginx-module --strip-components=1
+curl --silent --location https://github.com/openresty/headers-more-nginx-module/archive/refs/tags/${MODULE_NGINX_HEADERS_MORE}.tar.gz | tar xz -C /usr/src --one-top-level=headers-more-nginx-module --strip-components=1 || exit 1
 
 #
 # Module: echo-nginx-module
 #
-curl --silent --location https://github.com/openresty/echo-nginx-module/archive/refs/tags/${MODULE_NGINX_ECHO}.tar.gz | tar xz -C /usr/src --one-top-level=echo-nginx-module --strip-components=1
+curl --silent --location https://github.com/openresty/echo-nginx-module/archive/refs/tags/${MODULE_NGINX_ECHO}.tar.gz | tar xz -C /usr/src --one-top-level=echo-nginx-module --strip-components=1 || exit 1
 
 #
 # Module: ngx-fancyindex
 #
-curl --silent --location https://github.com/aperezdc/ngx-fancyindex/archive/refs/tags/${MODULE_NGINX_FANCYINDEX}.tar.gz | tar xz -C /usr/src --one-top-level=ngx-fancyindex --strip-components=1
+curl --silent --location https://github.com/aperezdc/ngx-fancyindex/archive/refs/tags/${MODULE_NGINX_FANCYINDEX}.tar.gz | tar xz -C /usr/src --one-top-level=ngx-fancyindex --strip-components=1 || exit 1
 
 #
 # Module: nginx-module-vts
 #
-curl --silent --location https://github.com/vozlt/nginx-module-vts/archive/refs/tags/${MODULE_NGINX_VTS}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-module-vts --strip-components=1
+curl --silent --location https://github.com/vozlt/nginx-module-vts/archive/refs/tags/${MODULE_NGINX_VTS}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-module-vts --strip-components=1 || exit 1
 
 #
 # Module: nginx_cookie_flag_module
 #
-curl --silent --location https://github.com/AirisX/nginx_cookie_flag_module/archive/refs/tags/${MODULE_NGINX_COOKIE_FLAG}.tar.gz | tar xz -C /usr/src --one-top-level=nginx_cookie_flag_module --strip-components=1
+curl --silent --location https://github.com/AirisX/nginx_cookie_flag_module/archive/refs/tags/${MODULE_NGINX_COOKIE_FLAG}.tar.gz | tar xz -C /usr/src --one-top-level=nginx_cookie_flag_module --strip-components=1 || exit 1
 
 #
 # Module: ngx_http_substitutions_filter_module
 #
-curl --silent --location https://github.com/yaoweibin/ngx_http_substitutions_filter_module/tarball/master | tar xz -C /usr/src --one-top-level=ngx_http_substitutions_filter_module --strip-components=1
+curl --silent --location https://github.com/yaoweibin/ngx_http_substitutions_filter_module/tarball/master | tar xz -C /usr/src --one-top-level=ngx_http_substitutions_filter_module --strip-components=1 || exit 1
 
 #
 # Module: njs
 #
-curl --silent --location https://github.com/nginx/njs/archive/refs/tags/${MODULE_NGINX_NJS}.tar.gz | tar xz -C /usr/src --one-top-level=njs --strip-components=1
+curl --silent --location https://github.com/nginx/njs/archive/refs/tags/${MODULE_NGINX_NJS}.tar.gz | tar xz -C /usr/src --one-top-level=njs --strip-components=1 || exit 1
 
 #
 # nginx QUIC branch
 #
-curl --silent --location https://hg.nginx.org/nginx-quic/archive/${NGINX_QUIC_COMMIT}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-quic --strip-components=1
+curl --silent --location https://hg.nginx.org/nginx-quic/archive/${NGINX_QUIC_COMMIT}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-quic --strip-components=1 || exit 1
 
 #
 # brotli cargo compile settings
@@ -140,7 +140,7 @@ echo $'[net]\ngit-fetch-with-cli = true' > /root/.cargo/config.toml
 if [ "${SSL_LIBRARY}" = "openssl" ]; then
   cd /usr/src/openssl
   CC=clang ./Configure no-shared no-tests linux-generic64
-  make -j$(getconf _NPROCESSORS_ONLN) && make install_sw
+  make -j$(getconf _NPROCESSORS_ONLN) && make install_sw || exit 1
   SSL_COMMIT="openssl+quic1-${OPENSSL_QUIC_TAG}"
 fi
 
@@ -154,7 +154,7 @@ if [ "${SSL_LIBRARY}" = "libressl" ]; then
     --disable-shared \
     --disable-tests \
     --enable-static
-  make -j$(getconf _NPROCESSORS_ONLN) install
+  make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
   SSL_COMMIT="libressl-${LIBRESSL_TAG}"
 fi
 
@@ -167,7 +167,7 @@ if [ "${SSL_LIBRARY}" = "boringssl" ]; then
   ln -sf /usr/src/boringssl/include/openssl /usr/src/boringssl/.openssl/include/openssl
   touch /usr/src/boringssl/.openssl/include/openssl/ssl.h
   CC=clang CXX=clang++ cmake -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo .
-  ninja
+  ninja || exit 1
   cp crypto/libcrypto.a ssl/libssl.a .openssl/lib
   SSL_COMMIT="boringssl-${BORINGSSL_COMMIT:0:7}"
 fi
@@ -182,7 +182,7 @@ cd /usr/src/zlib
 # nginx-quic
 #
 cd /usr/src/nginx-quic
-patch -p1 < /usr/src/nginx.patch
+patch -p1 < /usr/src/nginx.patch || exit 1
 CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
    --build="nginx-http3-${NGINX_QUIC_COMMIT} ${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
    --prefix=/var/lib/nginx \
@@ -235,8 +235,8 @@ CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
    --without-http_mirror_module \
    --without-http_scgi_module \
    --without-http_uwsgi_module
-make -j$(getconf _NPROCESSORS_ONLN)
-make -j$(getconf _NPROCESSORS_ONLN) install
+make -j$(getconf _NPROCESSORS_ONLN) || exit 1
+make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
 
 file /usr/sbin/nginx
 /usr/sbin/nginx -vv
