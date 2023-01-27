@@ -44,10 +44,10 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest,ghcr.io/${{ github.repository }}:${{ env.VERSION }}
+          tags: ghcr.io/${{ github.repository }}:${{ matrix.library }}-latest,ghcr.io/${{ github.repository }}:${{ matrix.library }}-${{ env.VERSION }}
       - name: Extract docker build artifacts
         run: |
-          ./extract-artifacts.sh ghcr.io/${{ github.repository }} latest ${{ matrix.library }}
+          ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ matrix.library }}-latest ${{ matrix.library }}
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
