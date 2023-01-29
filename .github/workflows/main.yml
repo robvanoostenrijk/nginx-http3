@@ -9,12 +9,6 @@ jobs:
   build-container-and-deploy:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    strategy:
-      matrix:
-        library:
-          - boringssl
-          - libressl
-          - openssl
     steps:
       - name: Checkout from GitHub
         uses: actions/checkout@v3
@@ -44,13 +38,13 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository }}:${{ matrix.library }},ghcr.io/${{ github.repository }}:${{ env.VERSION }}
+          tags: ghcr.io/${{ github.repository }}:quiche,ghcr.io/${{ github.repository }}:${{ env.VERSION }}
       - name: Extract docker build artifacts
         run: |
-          ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
+          ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} boringssl
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/nginx-http3-${{ matrix.library }}-linux-amd64.tar.xz
-            dist/nginx-http3-${{ matrix.library }}-linux-arm64.tar.xz
+            dist/nginx-http3-quiche-linux-amd64.tar.xz
+            dist/nginx-http3-quiche-linux-arm64.tar.xz
