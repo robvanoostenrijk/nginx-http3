@@ -42,6 +42,7 @@ jobs:
       - name: Extract docker build artifacts
         run: |
           ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} boringssl
+          ls ./dist/
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
