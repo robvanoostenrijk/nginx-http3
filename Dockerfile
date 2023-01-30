@@ -2,9 +2,9 @@
 ##################################################
 # Nginx with Quiche (HTTP/3), Brotli, Headers More
 ##################################################
-FROM alpine:latest AS builder
+FROM alpine:edge AS builder
 
-ENV CLOUDFLARE_QUICHE=0.16.0 \
+ENV CLOUDFLARE_QUICHE=960ca9fe6dd83c6a6980aec8a663ef1602d33b37 \
     CLOUDFLARE_ZLIB_COMMIT=885674026394870b7e7a05b7bf1ec5eb7bd8a9c0 \
     MODULE_NGINX_HEADERS_MORE=v0.34 \
     MODULE_NGINX_ECHO=v0.63 \
@@ -144,7 +144,7 @@ git checkout --recurse-submodules ${CLOUDFLARE_QUICHE}
 cd /usr/src/nginx
 patch -p01 < /usr/src/nginx.patch || exit 1
 CC=/usr/bin/clang CXX=/usr/bin/clang++ ./configure \
-  --build="nginx-${NGINX_VER} quiche-${CLOUDFLARE_QUICHE} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
+  --build="nginx-${NGINX_VER} quiche-${CLOUDFLARE_QUICHE:0:7} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
   --prefix=/var/lib/nginx \
   --sbin-path=/usr/sbin/nginx \
   --modules-path=/usr/lib/nginx/modules \
