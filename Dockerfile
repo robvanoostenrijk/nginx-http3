@@ -15,8 +15,9 @@ ENV OPENSSL_QUIC_TAG=openssl-3.0.7+quic1 \
     MODULE_NGINX_FANCYINDEX=v0.5.2 \
     MODULE_NGINX_VTS=v0.2.1 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
+    MODULE_NGINX_HTTP_AUTH_DIGEST=v1.0.0 \
     MODULE_NGINX_NJS=0.7.9 \
-    NGINX_QUIC_COMMIT=a954b551dc3f
+    NGINX_QUIC_COMMIT=12b756caaf16
 
 COPY --link ["nginx.patch", "/usr/src/nginx.patch"]
 COPY --link ["scratchfs", "/scratchfs"]
@@ -119,6 +120,11 @@ curl --silent --location https://github.com/AirisX/nginx_cookie_flag_module/arch
 curl --silent --location https://github.com/yaoweibin/ngx_http_substitutions_filter_module/tarball/master | tar xz -C /usr/src --one-top-level=ngx_http_substitutions_filter_module --strip-components=1 || exit 1
 
 #
+# Module: nginx-http-auth-digest
+#
+curl --silent --location https://github.com/atomx/nginx-http-auth-digest/archive/refs/tags/${MODULE_NGINX_HTTP_AUTH_DIGEST}.tar.gz | tar xz -C /usr/src --one-top-level=nginx_http_auth_digest --strip-components=1 || exit 1
+
+#
 # Module: njs
 #
 curl --silent --location https://github.com/nginx/njs/archive/refs/tags/${MODULE_NGINX_NJS}.tar.gz | tar xz -C /usr/src --one-top-level=njs --strip-components=1 || exit 1
@@ -184,7 +190,7 @@ cd /usr/src/zlib
 cd /usr/src/nginx-quic
 patch -p1 < /usr/src/nginx.patch || exit 1
 CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
-   --build="nginx-http3-${NGINX_QUIC_COMMIT} ${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
+   --build="nginx-http3-${NGINX_QUIC_COMMIT} ${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} nginx_http_auth_digest-${MODULE_NGINX_HTTP_AUTH_DIGEST} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
    --prefix=/var/lib/nginx \
    --sbin-path=/usr/sbin/nginx \
    --modules-path=/usr/lib/nginx/modules \
@@ -225,6 +231,7 @@ CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
    --add-module=/usr/src/echo-nginx-module \
    --add-module=/usr/src/headers-more-nginx-module \
    --add-module=/usr/src/nginx_cookie_flag_module \
+   --add-module=/usr/src/nginx_http_auth_digest \
    --add-module=/usr/src/nginx-module-vts \
    --add-module=/usr/src/ngx_brotli \
    --add-module=/usr/src/ngx_http_substitutions_filter_module \
