@@ -16,7 +16,7 @@ ENV OPENSSL_QUIC_TAG=openssl-3.0.8-quic1 \
     MODULE_NGINX_VTS=v0.2.1 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
     MODULE_NGINX_HTTP_AUTH_DIGEST=v1.0.0 \
-    MODULE_NGINX_NJS=0.7.10 \
+    MODULE_NGINX_NJS=0.7.9 \
     NGINX_QUIC_COMMIT=12b756caaf16
 
 COPY --link ["nginx.patch", "/usr/src/nginx.patch"]
@@ -40,6 +40,7 @@ apk add --no-cache --virtual .build-deps \
   git \
   go \
   libtool \
+  libxslt-dev \
   linux-headers \
   make \
   patch \
