@@ -17,7 +17,7 @@ ENV OPENSSL_QUIC_TAG=openssl-3.0.8-quic1 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
     MODULE_NGINX_HTTP_AUTH_DIGEST=v1.0.0 \
     MODULE_NGINX_NJS=0.7.9 \
-    NGINX_QUIC_COMMIT=f4279edda9fd
+    NGINX_QUIC_COMMIT=0af598651e33
 
 COPY --link ["nginx.patch", "/usr/src/nginx.patch"]
 COPY --link ["scratchfs", "/scratchfs"]
