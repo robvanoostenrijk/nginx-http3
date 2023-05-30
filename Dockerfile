@@ -7,19 +7,20 @@ FROM alpine:latest AS builder
 ARG SSL_LIBRARY=openssl
 
 ENV OPENSSL_QUIC_TAG=openssl-3.0.8-quic1 \
-    LIBRESSL_TAG=v3.7.1 \
-    BORINGSSL_COMMIT=2e13e36e7477cfe2ef48312634b1c34103da4899 \
-    CLOUDFLARE_ZLIB_COMMIT=9e601a3f3752be8c47e65d1afdb4e543605017f9 \
+    LIBRESSL_TAG=v3.8.0 \
+    BORINGSSL_COMMIT=b0a026f8541c551854efd617021bb276f1fe5c23 \
+    CLOUDFLARE_ZLIB_COMMIT=d20bdfcd0efbdd72cb9d857e098ceac1bad41432 \
     MODULE_NGINX_HEADERS_MORE=v0.34 \
     MODULE_NGINX_ECHO=v0.63 \
     MODULE_NGINX_FANCYINDEX=v0.5.2 \
-    MODULE_NGINX_VTS=v0.2.1 \
+    MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
     MODULE_NGINX_HTTP_AUTH_DIGEST=v1.0.0 \
-    MODULE_NGINX_NJS=0.7.9 \
-    NGINX_QUIC_COMMIT=0af598651e33
+    MODULE_NGINX_NJS=0.7.12 \
+    NGINX_QUIC_COMMIT=8eae1b4f1c55
 
 COPY --link ["nginx.patch", "/usr/src/nginx.patch"]
+COPY --link ["njs.patch", "/usr/src/njs.patch"]
 COPY --link ["scratchfs", "/scratchfs"]
 
 RUN <<EOF
@@ -186,11 +187,17 @@ cd /usr/src/zlib
 ./configure --static
 
 #
+# njs-patch
+#
+cd /usr/src/njs
+patch -p1 < /usr/src/njs.patch || exit 1
+
+#
 # nginx-quic
 #
 cd /usr/src/nginx-quic
 patch -p1 < /usr/src/nginx.patch || exit 1
-CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
+NJS_LIBXSLT=NO CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
    --build="nginx-http3-${NGINX_QUIC_COMMIT} ${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} nginx_http_auth_digest-${MODULE_NGINX_HTTP_AUTH_DIGEST} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
    --prefix=/var/lib/nginx \
    --sbin-path=/usr/sbin/nginx \
