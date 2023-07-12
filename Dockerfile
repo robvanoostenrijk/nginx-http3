@@ -6,7 +6,7 @@ FROM alpine:latest AS builder
 
 ARG SSL_LIBRARY=openssl
 
-ENV OPENSSL_QUIC_TAG=openssl-3.0.8-quic1 \
+ENV OPENSSL_QUIC_TAG=openssl-3.0.9-quic1 \
     LIBRESSL_TAG=v3.8.0 \
     BORINGSSL_COMMIT=b0a026f8541c551854efd617021bb276f1fe5c23 \
     CLOUDFLARE_ZLIB_COMMIT=d20bdfcd0efbdd72cb9d857e098ceac1bad41432 \
@@ -16,11 +16,11 @@ ENV OPENSSL_QUIC_TAG=openssl-3.0.8-quic1 \
     MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
     MODULE_NGINX_HTTP_AUTH_DIGEST=v1.0.0 \
-    MODULE_NGINX_NJS=0.7.12 \
-    NGINX_QUIC_COMMIT=8eae1b4f1c55
+    MODULE_NGINX_NJS=0.8.0 \
+    NGINX_QUIC_COMMIT=77c1418916f7
 
-COPY --link ["nginx.patch", "/usr/src/nginx.patch"]
-COPY --link ["njs.patch", "/usr/src/njs.patch"]
+COPY --link ["nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
+COPY --link ["use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
 COPY --link ["scratchfs", "/scratchfs"]
 
 RUN <<EOF
@@ -187,16 +187,11 @@ cd /usr/src/zlib
 ./configure --static
 
 #
-# njs-patch
-#
-cd /usr/src/njs
-patch -p1 < /usr/src/njs.patch || exit 1
-
-#
 # nginx-quic
 #
 cd /usr/src/nginx-quic
-patch -p1 < /usr/src/nginx.patch || exit 1
+patch -p1 < /usr/src/nginx_dynamic_tls_records.patch || exit 1
+patch -p1 < /usr/src/use_openssl_md5_sha1.patch || exit 1
 NJS_LIBXSLT=NO CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
    --build="nginx-http3-${NGINX_QUIC_COMMIT} ${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} nginx_http_auth_digest-${MODULE_NGINX_HTTP_AUTH_DIGEST} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
    --prefix=/var/lib/nginx \
@@ -224,7 +219,6 @@ NJS_LIBXSLT=NO CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
    --with-http_ssl_module \
    --with-http_stub_status_module \
    --with-http_sub_module \
-   --with-http_v2_hpack_enc \
    --with-http_v2_module \
    --with-http_v3_module \
    --with-ld-opt="-w -s -L/usr/src/boringssl/.openssl/lib -static" \
