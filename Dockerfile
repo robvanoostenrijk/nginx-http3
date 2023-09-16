@@ -16,7 +16,7 @@ ENV OPENSSL_QUIC_TAG=openssl-3.0.10-quic1 \
     MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
     MODULE_NGINX_HTTP_AUTH_DIGEST=v1.0.0 \
-    MODULE_NGINX_NJS=0.8.0 \
+    MODULE_NGINX_NJS=0.8.1 \
     NGINX_QUIC_COMMIT=44536076405c
 
 COPY --link ["nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
@@ -187,12 +187,32 @@ cd /usr/src/zlib
 ./configure --static
 
 #
+# ngx_brotli
+#
+cd /usr/src/ngx_brotli/deps/brotli
+mkdir out && cd out
+cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects -Wl,--gc-sections" \
+    -DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects -Wl,--gc-sections" \
+    -DCMAKE_INSTALL_PREFIX=./installed \
+    ..
+cmake \
+     --build . \
+     --config Release \
+     --target brotlienc
+
+#
 # nginx-quic
 #
 cd /usr/src/nginx-quic
 patch -p1 < /usr/src/nginx_dynamic_tls_records.patch || exit 1
 patch -p1 < /usr/src/use_openssl_md5_sha1.patch || exit 1
-NJS_LIBXSLT=NO CC=/usr/bin/clang CXX=/usr/bin/clang++ auto/configure \
+NJS_LIBXSLT=NO \
+CC=/usr/bin/clang \
+CXX=/usr/bin/clang++ \
+auto/configure \
    --build="nginx-http3-${NGINX_QUIC_COMMIT} ${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} nginx_http_auth_digest-${MODULE_NGINX_HTTP_AUTH_DIGEST} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
    --prefix=/var/lib/nginx \
    --sbin-path=/usr/sbin/nginx \
