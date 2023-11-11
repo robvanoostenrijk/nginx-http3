@@ -16,7 +16,7 @@ ENV OPENSSL_QUIC_TAG=openssl-3.1.4-quic1 \
     MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
     MODULE_NGINX_HTTP_AUTH_DIGEST=v1.0.0 \
-    MODULE_NGINX_NJS=0.8.1 \
+    MODULE_NGINX_NJS=0.8.2 \
     NGINX_QUIC_COMMIT=44536076405c
 
 COPY --link ["nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
