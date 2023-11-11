@@ -7,7 +7,7 @@ FROM alpine:latest AS builder
 ARG SSL_LIBRARY=openssl
 
 ENV OPENSSL_QUIC_TAG=openssl-3.1.4-quic1 \
-    LIBRESSL_TAG=v3.7.3 \
+    LIBRESSL_TAG=v3.8.2 \
     BORINGSSL_COMMIT=ad57528d2c978543106f9b115bd0eb658f3ebdd2 \
     CLOUDFLARE_ZLIB_COMMIT=d20bdfcd0efbdd72cb9d857e098ceac1bad41432 \
     MODULE_NGINX_HEADERS_MORE=v0.35 \
@@ -17,7 +17,7 @@ ENV OPENSSL_QUIC_TAG=openssl-3.1.4-quic1 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
     MODULE_NGINX_HTTP_AUTH_DIGEST=v1.0.0 \
     MODULE_NGINX_NJS=0.8.2 \
-    NGINX_QUIC_COMMIT=44536076405c
+    NGINX_QUIC_COMMIT=25a2efd97a3e
 
 COPY --link ["nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
 COPY --link ["use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
