@@ -6,7 +6,7 @@ FROM alpine:latest AS builder
 
 ARG SSL_LIBRARY=openssl
 
-ENV OPENSSL_QUIC_TAG=openssl-3.0.10-quic1 \
+ENV OPENSSL_QUIC_TAG=openssl-3.1.4-quic1 \
     LIBRESSL_TAG=v3.7.3 \
     BORINGSSL_COMMIT=b0a026f8541c551854efd617021bb276f1fe5c23 \
     CLOUDFLARE_ZLIB_COMMIT=d20bdfcd0efbdd72cb9d857e098ceac1bad41432 \
