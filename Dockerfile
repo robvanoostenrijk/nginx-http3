@@ -8,14 +8,14 @@ ARG SSL_LIBRARY=openssl
 
 ENV OPENSSL_QUIC_TAG=openssl-3.1.4-quic1 \
     LIBRESSL_TAG=v3.8.2 \
-    BORINGSSL_COMMIT=ad57528d2c978543106f9b115bd0eb658f3ebdd2 \
-    CLOUDFLARE_ZLIB_COMMIT=d20bdfcd0efbdd72cb9d857e098ceac1bad41432 \
-    MODULE_NGINX_HEADERS_MORE=v0.35 \
+    BORINGSSL_COMMIT=db7308de87ea138e7bbcbbb00dfc9b841774ba2f \
+    CLOUDFLARE_ZLIB_COMMIT=7aa510344e06fecd6fe09195ac22e9a424ceb660 \
+    MODULE_NGINX_HEADERS_MORE=v0.37 \
     MODULE_NGINX_ECHO=v0.63 \
     MODULE_NGINX_FANCYINDEX=v0.5.2 \
     MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
-    MODULE_NGINX_HTTP_AUTH_DIGEST=v1.0.0 \
+    MODULE_NGINX_HTTP_AUTH_DIGEST=5a2cae4812d8a1ba5f83dfbcb8d043d05c8e6f97 \
     MODULE_NGINX_NJS=0.8.2 \
     NGINX_QUIC_COMMIT=25a2efd97a3e
 
@@ -131,7 +131,7 @@ curl --silent --location https://github.com/yaoweibin/ngx_http_substitutions_fil
 #
 # Module: nginx-http-auth-digest
 #
-curl --silent --location https://github.com/atomx/nginx-http-auth-digest/archive/refs/tags/${MODULE_NGINX_HTTP_AUTH_DIGEST}.tar.gz | tar xz -C /usr/src --one-top-level=nginx_http_auth_digest --strip-components=1 || exit 1
+curl --silent --location https://api.github.com/repos/samizdatco/nginx-http-auth-digest/tarball/${MODULE_NGINX_HTTP_AUTH_DIGEST} | tar xz -C /usr/src --one-top-level=nginx_http_auth_digest --strip-components=1 || exit 1
 
 #
 # Module: njs
