@@ -41,13 +41,20 @@ apk add --no-cache --virtual .build-deps \
   git \
   go \
   libtool \
+  libxml2-dev \
+  libxml2-static \
   libxslt-dev \
+  libxslt-static \
   linux-headers \
   make \
   patch \
   pcre2-dev \
   rust \
-  samurai
+  samurai \
+  xz-dev \
+  xz-static \
+  zlib-dev \
+  zlib-static
 
 #
 # Prepare destination scratchfs
@@ -203,13 +210,17 @@ cmake \
      --config Release \
      --target brotlienc
 
+EOF
+
+RUN <<EOF
+
 #
 # nginx-quic
 #
 cd /usr/src/nginx-quic
 patch -p1 < /usr/src/nginx_dynamic_tls_records.patch || exit 1
 patch -p1 < /usr/src/use_openssl_md5_sha1.patch || exit 1
-NJS_LIBXSLT=NO \
+#NJS_LIBXSLT=NO \
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 auto/configure \
@@ -232,16 +243,22 @@ auto/configure \
    --with-file-aio \
    --with-http_addition_module \
    --with-http_auth_request_module \
+   --with-http_dav_module \
+   --with-http_degradation_module \
    --with-http_gunzip_module \
    --with-http_gzip_static_module \
+   --with-http_random_index_module \
    --with-http_realip_module \
+   --with-http_secure_link_module \
    --with-http_slice_module \
    --with-http_ssl_module \
+   --with-http_slice_module \
    --with-http_stub_status_module \
    --with-http_sub_module \
    --with-http_v2_module \
    --with-http_v3_module \
-   --with-ld-opt="-w -s -L/usr/src/boringssl/.openssl/lib -static" \
+   --with-http_xslt_module \
+   --with-ld-opt="-w -s -lxml2 -lxslt -llzma -lz -L/usr/src/boringssl/.openssl/lib -static" \
    --with-pcre-jit \
    --with-pcre-opt="-O3" \
    --with-poll_module \
@@ -263,7 +280,7 @@ auto/configure \
    --without-http_grpc_module \
    --without-http_mirror_module \
    --without-http_scgi_module \
-   --without-http_uwsgi_module
+   --without-http_uwsgi_module || cat objs/autoconf.err
 make -j$(getconf _NPROCESSORS_ONLN) || exit 1
 make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
 
