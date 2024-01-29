@@ -10,12 +10,12 @@ ENV OPENSSL_QUIC_TAG=openssl-3.1.4-quic1 \
     LIBRESSL_TAG=v3.8.2 \
     BORINGSSL_COMMIT=db7308de87ea138e7bbcbbb00dfc9b841774ba2f \
     CLOUDFLARE_ZLIB_COMMIT=7aa510344e06fecd6fe09195ac22e9a424ceb660 \
+    LIBXML2=v2.12.4 \
+    LIBXSLT=v1.1.39 \
     MODULE_NGINX_HEADERS_MORE=v0.37 \
     MODULE_NGINX_ECHO=v0.63 \
-    MODULE_NGINX_FANCYINDEX=v0.5.2 \
     MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
-    MODULE_NGINX_HTTP_AUTH_DIGEST=5a2cae4812d8a1ba5f83dfbcb8d043d05c8e6f97 \
     MODULE_NGINX_NJS=0.8.2 \
     NGINX_QUIC_COMMIT=25a2efd97a3e
 
@@ -41,20 +41,11 @@ apk add --no-cache --virtual .build-deps \
   git \
   go \
   libtool \
-  libxml2-dev \
-  libxml2-static \
-  libxslt-dev \
-  libxslt-static \
   linux-headers \
   make \
   patch \
   pcre2-dev \
-  rust \
-  samurai \
-  xz-dev \
-  xz-static \
-  zlib-dev \
-  zlib-static
+  samurai
 
 #
 # Prepare destination scratchfs
@@ -91,7 +82,17 @@ if [ "${SSL_LIBRARY}" = "boringssl" ]; then curl --silent --location https://api
 #
 # Cloudflare enhanced zlib
 #
-curl --silent --location https://api.github.com/repos/cloudflare/zlib/tarball/${CLOUDFLARE_ZLIB_COMMIT} | tar xz -C /usr/src --one-top-level=zlib --strip-components=1 || exit 1
+curl --silent --location https://github.com/cloudflare/zlib/tarball/gcc.amd64 | tar xz -C /usr/src --one-top-level=zlib --strip-components=1 || exit 1
+
+#
+# Library: libxml2
+#
+curl --silent --location https://gitlab.gnome.org/GNOME/libxml2/-/archive/${LIBXML2}/libxml2-${LIBXML2}.tar.gz | tar xz -C /usr/src || exit 1
+
+#
+# Library: libxslt
+#
+curl --silent --location https://gitlab.gnome.org/GNOME/libxslt/-/archive/${LIBXSLT}/libxslt-${LIBXSLT}.tar.gz | tar xz -C /usr/src || exit 1
 
 #
 # Module: ngx_brotli
@@ -109,11 +110,6 @@ curl --silent --location https://github.com/openresty/headers-more-nginx-module/
 curl --silent --location https://github.com/openresty/echo-nginx-module/archive/refs/tags/${MODULE_NGINX_ECHO}.tar.gz | tar xz -C /usr/src --one-top-level=echo-nginx-module --strip-components=1 || exit 1
 
 #
-# Module: ngx-fancyindex
-#
-curl --silent --location https://github.com/aperezdc/ngx-fancyindex/archive/refs/tags/${MODULE_NGINX_FANCYINDEX}.tar.gz | tar xz -C /usr/src --one-top-level=ngx-fancyindex --strip-components=1 || exit 1
-
-#
 # Module: nginx-module-vts
 #
 curl --silent --location https://github.com/vozlt/nginx-module-vts/archive/refs/tags/${MODULE_NGINX_VTS}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-module-vts --strip-components=1 || exit 1
@@ -127,11 +123,6 @@ curl --silent --location https://github.com/AirisX/nginx_cookie_flag_module/arch
 # Module: ngx_http_substitutions_filter_module
 #
 curl --silent --location https://github.com/yaoweibin/ngx_http_substitutions_filter_module/tarball/master | tar xz -C /usr/src --one-top-level=ngx_http_substitutions_filter_module --strip-components=1 || exit 1
-
-#
-# Module: nginx-http-auth-digest
-#
-curl --silent --location https://api.github.com/repos/samizdatco/nginx-http-auth-digest/tarball/${MODULE_NGINX_HTTP_AUTH_DIGEST} | tar xz -C /usr/src --one-top-level=nginx_http_auth_digest --strip-components=1 || exit 1
 
 #
 # Module: njs
@@ -156,7 +147,7 @@ if [ "${SSL_LIBRARY}" = "openssl" ]; then
   cd /usr/src/openssl
   CC=clang ./Configure no-shared no-tests linux-generic64
   make -j$(getconf _NPROCESSORS_ONLN) && make install_sw || exit 1
-  SSL_COMMIT="openssl+quic1-${OPENSSL_QUIC_TAG}"
+  SSL_COMMIT="${OPENSSL_QUIC_TAG}"
 fi
 
 #
@@ -210,9 +201,51 @@ cmake \
      --config Release \
      --target brotlienc
 
-EOF
+#
+# libxml2
+#
+cd /usr/src/libxml2-${LIBXML2}
+./autogen.sh \
+  --prefix="/usr" \
+  --disable-shared \
+  --enable-static \
+  --without-catalog \
+  --without-debug \
+  --without-http \
+  --without-iconv \
+  --without-iso8859x \
+  --without-lzma \
+  --without-modules \
+  --without-pattern \
+  --without-python \
+  --without-reader \
+  --without-regexps \
+  --without-sax1 \
+  --without-schemas \
+  --without-schematron \
+  --without-writer \
+  --without-xinclude \
+  --without-xptr \
+  --without-zlib
+make -j$(getconf _NPROCESSORS_ONLN) || exit 1
+make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
 
-RUN <<EOF
+#
+# libxslt
+#
+cd /usr/src/libxslt-${LIBXSLT}
+./autogen.sh \
+  --prefix="/usr" \
+  --disable-shared \
+  --enable-static \
+  --without-crypto \
+  --without-debug \
+  --without-debugger \
+  --without-plugins \
+  --without-profiler \
+  --without-python
+make -j$(getconf _NPROCESSORS_ONLN) || exit 1
+make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
 
 #
 # nginx-quic
@@ -220,11 +253,10 @@ RUN <<EOF
 cd /usr/src/nginx-quic
 patch -p1 < /usr/src/nginx_dynamic_tls_records.patch || exit 1
 patch -p1 < /usr/src/use_openssl_md5_sha1.patch || exit 1
-#NJS_LIBXSLT=NO \
-CC=/usr/bin/clang \
+CC=/usr/bin/clang \/
 CXX=/usr/bin/clang++ \
 auto/configure \
-   --build="nginx-http3-${NGINX_QUIC_COMMIT} ${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} ngx-fancyindex-${MODULE_NGINX_FANCYINDEX} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} nginx_http_auth_digest-${MODULE_NGINX_HTTP_AUTH_DIGEST} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
+   --build="nginx-http3-${NGINX_QUIC_COMMIT} ${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
    --prefix=/var/lib/nginx \
    --sbin-path=/usr/sbin/nginx \
    --modules-path=/usr/lib/nginx/modules \
@@ -238,7 +270,7 @@ auto/configure \
    --http-scgi-temp-path=/var/lib/nginx/tmp/scgi \
    --user=nginx \
    --group=nginx \
-   --with-cc-opt="-O3 -static -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable -I/usr/src/boringssl/.openssl/include" \
+   --with-cc-opt="-O3 -static -Wno-sign-compare -Wno-discarded-qualifiers -Wno-conditional-uninitialized -Wno-unused-but-set-variable -I/usr/src/boringssl/.openssl/include" \
    --with-compat \
    --with-file-aio \
    --with-http_addition_module \
@@ -258,7 +290,7 @@ auto/configure \
    --with-http_v2_module \
    --with-http_v3_module \
    --with-http_xslt_module \
-   --with-ld-opt="-w -s -lxml2 -lxslt -llzma -lz -L/usr/src/boringssl/.openssl/lib -static" \
+   --with-ld-opt="-L/usr/src/boringssl/.openssl/lib -w -s -static -lexslt -lxslt -lxml2" \
    --with-pcre-jit \
    --with-pcre-opt="-O3" \
    --with-poll_module \
@@ -270,11 +302,9 @@ auto/configure \
    --add-module=/usr/src/echo-nginx-module \
    --add-module=/usr/src/headers-more-nginx-module \
    --add-module=/usr/src/nginx_cookie_flag_module \
-   --add-module=/usr/src/nginx_http_auth_digest \
    --add-module=/usr/src/nginx-module-vts \
    --add-module=/usr/src/ngx_brotli \
    --add-module=/usr/src/ngx_http_substitutions_filter_module \
-   --add-module=/usr/src/ngx-fancyindex \
    --add-module=/usr/src/njs/nginx \
    --without-http_browser_module \
    --without-http_grpc_module \
@@ -284,13 +314,14 @@ auto/configure \
 make -j$(getconf _NPROCESSORS_ONLN) || exit 1
 make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
 
+ls -lh /usr/sbin/nginx
 file /usr/sbin/nginx
 /usr/sbin/nginx -vv
 
 # Populate /scratchfs
 cp /etc/nginx/mime.types /scratchfs/etc/nginx/
 cp /usr/src/nginx-quic/docs/html/* /scratchfs/var/lib/nginx/html/
-cp /usr/sbin/nginx /scratchfs/usr/sbin/
+cp /usr/sbin/nginx /scratchfs/usr/sbin
 
 EOF
 
