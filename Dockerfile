@@ -8,8 +8,7 @@ ARG SSL_LIBRARY=openssl
 
 ENV OPENSSL_QUIC_TAG=opernssl-3.1.5-quic1 \
     LIBRESSL_TAG=v3.8.2 \
-    BORINGSSL_COMMIT=db7308de87ea138e7bbcbbb00dfc9b841774ba2f \
-    CLOUDFLARE_ZLIB_COMMIT=7aa510344e06fecd6fe09195ac22e9a424ceb660 \
+    BORINGSSL_BRANCH=chromium-stable \
     LIBXML2=v2.12.4 \
     LIBXSLT=v1.1.39 \
     MODULE_NGINX_HEADERS_MORE=v0.37 \
@@ -77,7 +76,7 @@ if [ "${SSL_LIBRARY}" = "libressl" ]; then curl --silent --location https://gith
 #
 # BoringSSL
 #
-if [ "${SSL_LIBRARY}" = "boringssl" ]; then curl --silent --location https://api.github.com/repos/google/boringssl/tarball/${BORINGSSL_COMMIT} | tar xz -C /usr/src --one-top-level=boringssl --strip-components=1 || exit 1; fi
+if [ "${SSL_LIBRARY}" = "boringssl" ]; then curl --silent --location https://github.com/google/boringssl/archive/refs/heads/${BORINGSSL_BRANCH}.tar.gz | tar xz -C /usr/src --one-top-level=boringssl --strip-components=1 || exit 1; fi
 
 #
 # Cloudflare enhanced zlib
@@ -175,7 +174,7 @@ if [ "${SSL_LIBRARY}" = "boringssl" ]; then
   CC=clang CXX=clang++ cmake -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo .
   ninja || exit 1
   cp crypto/libcrypto.a ssl/libssl.a .openssl/lib
-  SSL_COMMIT="boringssl-${BORINGSSL_COMMIT:0:7}"
+  SSL_COMMIT="boringssl-${BORINGSSL_BRANCH}"
 fi
 
 #
