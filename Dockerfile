@@ -15,7 +15,7 @@ ENV OPENSSL_QUIC_TAG=opernssl-3.1.5-quic1 \
     MODULE_NGINX_ECHO=v0.63 \
     MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
-    MODULE_NGINX_NJS=0.8.2 \
+    MODULE_NGINX_NJS=0.8.3 \
     NGINX_QUIC_COMMIT=25a2efd97a3e
 
 COPY --link ["nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
