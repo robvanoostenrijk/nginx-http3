@@ -16,7 +16,7 @@ ENV OPENSSL_QUIC_TAG=opernssl-3.1.5-quic1 \
     MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
     MODULE_NGINX_NJS=0.8.3 \
-    NGINX_QUIC_COMMIT=release-1.25.4
+    NGINX=1.25.4
 
 COPY --link ["nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
 COPY --link ["use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
@@ -129,9 +129,10 @@ curl --silent --location https://github.com/yaoweibin/ngx_http_substitutions_fil
 curl --silent --location https://github.com/nginx/njs/archive/refs/tags/${MODULE_NGINX_NJS}.tar.gz | tar xz -C /usr/src --one-top-level=njs --strip-components=1 || exit 1
 
 #
-# nginx QUIC branch
+# nginx
 #
-curl --silent --location https://hg.nginx.org/nginx-quic/archive/${NGINX_QUIC_COMMIT}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-quic --strip-components=1 || exit 1
+#curl --silent --location https://hg.nginx.org/nginx-quic/archive/${NGINX_QUIC_COMMIT}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-quic --strip-components=1 || exit 1
+curl --silent --location https://freenginx.org/download/freenginx-${NGINX}.tar.gz | tar xz -C /usr/src --one-top-level=nginx --strip-components=1 || exit 1
 
 #
 # brotli cargo compile settings
@@ -247,15 +248,15 @@ make -j$(getconf _NPROCESSORS_ONLN) || exit 1
 make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
 
 #
-# nginx-quic
+# nginx
 #
-cd /usr/src/nginx-quic
+cd /usr/src/nginx
 patch -p1 < /usr/src/nginx_dynamic_tls_records.patch || exit 1
 patch -p1 < /usr/src/use_openssl_md5_sha1.patch || exit 1
-CC=/usr/bin/clang \/
+CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
-auto/configure \
-   --build="nginx-http3-${NGINX_QUIC_COMMIT} ${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
+./configure \
+   --build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
    --prefix=/var/lib/nginx \
    --sbin-path=/usr/sbin/nginx \
    --modules-path=/usr/lib/nginx/modules \
@@ -269,7 +270,7 @@ auto/configure \
    --http-scgi-temp-path=/var/lib/nginx/tmp/scgi \
    --user=nginx \
    --group=nginx \
-   --with-cc-opt="-O3 -static -Wno-sign-compare -Wno-discarded-qualifiers -Wno-conditional-uninitialized -Wno-unused-but-set-variable -I/usr/src/boringssl/.openssl/include" \
+   --with-cc-opt="-O3 -static -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable -I/usr/src/boringssl/.openssl/include" \
    --with-compat \
    --with-file-aio \
    --with-http_addition_module \
@@ -319,7 +320,7 @@ file /usr/sbin/nginx
 
 # Populate /scratchfs
 cp /etc/nginx/mime.types /scratchfs/etc/nginx/
-cp /usr/src/nginx-quic/docs/html/* /scratchfs/var/lib/nginx/html/
+cp /usr/src/nginx/html/* /scratchfs/var/lib/nginx/html/
 cp /usr/sbin/nginx /scratchfs/usr/sbin
 
 EOF
