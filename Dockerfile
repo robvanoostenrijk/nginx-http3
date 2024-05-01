@@ -6,17 +6,17 @@ FROM alpine:latest AS builder
 
 ARG SSL_LIBRARY=openssl
 
-ENV OPENSSL_QUIC_TAG=opernssl-3.1.5-quic1 \
-    LIBRESSL_TAG=v3.8.2 \
+ENV OPENSSL_QUIC_TAG=openssl-3.1.5-quic1 \
+    LIBRESSL_TAG=v3.9.1 \
     BORINGSSL_BRANCH=chromium-stable \
-    LIBXML2=v2.12.4 \
+    LIBXML2=v2.12.6 \
     LIBXSLT=v1.1.39 \
     MODULE_NGINX_HEADERS_MORE=v0.37 \
     MODULE_NGINX_ECHO=v0.63 \
     MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
     MODULE_NGINX_NJS=0.8.3 \
-    NGINX=1.25.4
+    NGINX=1.26.0
 
 COPY --link ["nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
 COPY --link ["use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
