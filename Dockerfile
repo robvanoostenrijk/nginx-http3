@@ -8,7 +8,6 @@ ARG SSL_LIBRARY=openssl
 
 ENV OPENSSL_QUIC_TAG=openssl-3.1.5-quic1 \
     LIBRESSL_TAG=v3.9.1 \
-    BORINGSSL_BRANCH=chromium-stable \
     LIBXML2=v2.12.6 \
     LIBXSLT=v1.1.39 \
     MODULE_NGINX_HEADERS_MORE=v0.37 \
@@ -72,11 +71,6 @@ if [ "${SSL_LIBRARY}" = "openssl" ]; then curl --silent --location https://githu
 # LibreSSL
 #
 if [ "${SSL_LIBRARY}" = "libressl" ]; then curl --silent --location https://github.com/libressl-portable/portable/archive/refs/tags/${LIBRESSL_TAG}.tar.gz | tar xz -C /usr/src --one-top-level=libressl --strip-components=1 || exit 1; fi
-
-#
-# BoringSSL
-#
-if [ "${SSL_LIBRARY}" = "boringssl" ]; then curl --silent --location https://github.com/google/boringssl/archive/refs/heads/${BORINGSSL_BRANCH}.tar.gz | tar xz -C /usr/src --one-top-level=boringssl --strip-components=1 || exit 1; fi
 
 #
 # Cloudflare enhanced zlib
@@ -162,20 +156,6 @@ if [ "${SSL_LIBRARY}" = "libressl" ]; then
     --enable-static
   make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
   SSL_COMMIT="libressl-${LIBRESSL_TAG}"
-fi
-
-#
-# BoringSSL
-#
-if [ "${SSL_LIBRARY}" = "boringssl" ]; then
-  cd /usr/src/boringssl
-  mkdir -p .openssl/lib .openssl/include
-  ln -sf /usr/src/boringssl/include/openssl /usr/src/boringssl/.openssl/include/openssl
-  touch /usr/src/boringssl/.openssl/include/openssl/ssl.h
-  CC=clang CXX=clang++ cmake -GNinja -DCMAKE_BUILD_TYPE=RelWithDebInfo .
-  ninja || exit 1
-  cp crypto/libcrypto.a ssl/libssl.a .openssl/lib
-  SSL_COMMIT="boringssl-${BORINGSSL_BRANCH}"
 fi
 
 #
@@ -270,7 +250,7 @@ CXX=/usr/bin/clang++ \
    --http-scgi-temp-path=/var/lib/nginx/tmp/scgi \
    --user=nginx \
    --group=nginx \
-   --with-cc-opt="-O3 -static -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable -I/usr/src/boringssl/.openssl/include" \
+   --with-cc-opt="-O3 -static -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable" \
    --with-compat \
    --with-file-aio \
    --with-http_addition_module \
@@ -290,7 +270,7 @@ CXX=/usr/bin/clang++ \
    --with-http_v2_module \
    --with-http_v3_module \
    --with-http_xslt_module \
-   --with-ld-opt="-L/usr/src/boringssl/.openssl/lib -w -s -static -lexslt -lxslt -lxml2" \
+   --with-ld-opt="-w -s -static -lexslt -lxslt -lxml2" \
    --with-pcre-jit \
    --with-pcre-opt="-O3" \
    --with-poll_module \
