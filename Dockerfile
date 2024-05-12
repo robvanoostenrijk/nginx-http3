@@ -7,7 +7,7 @@ FROM alpine:latest AS builder
 ARG SSL_LIBRARY=openssl
 
 ENV OPENSSL_QUIC_TAG=openssl-3.1.5-quic1 \
-    LIBRESSL_TAG=v3.9.1 \
+    LIBRESSL_TAG=v3.9.2 \
     LIBXML2=v2.12.6 \
     LIBXSLT=v1.1.39 \
     MODULE_NGINX_HEADERS_MORE=v0.37 \
