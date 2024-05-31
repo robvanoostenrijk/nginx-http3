@@ -8,14 +8,14 @@ ARG SSL_LIBRARY=openssl
 
 ENV OPENSSL_QUIC_TAG=openssl-3.1.5-quic1 \
     LIBRESSL_TAG=v3.9.2 \
-    LIBXML2=v2.12.6 \
+    LIBXML2=v2.12.7 \
     LIBXSLT=v1.1.39 \
     MODULE_NGINX_HEADERS_MORE=v0.37 \
     MODULE_NGINX_ECHO=v0.63 \
     MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
-    MODULE_NGINX_NJS=0.8.3 \
-    NGINX=1.26.0
+    MODULE_NGINX_NJS=0.8.4 \
+    NGINX=1.27.0
 
 COPY --link ["nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
 COPY --link ["use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
@@ -126,7 +126,7 @@ curl --silent --location https://github.com/nginx/njs/archive/refs/tags/${MODULE
 # nginx
 #
 #curl --silent --location https://hg.nginx.org/nginx-quic/archive/${NGINX_QUIC_COMMIT}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-quic --strip-components=1 || exit 1
-curl --silent --location https://freenginx.org/download/freenginx-${NGINX}.tar.gz | tar xz -C /usr/src --one-top-level=nginx --strip-components=1 || exit 1
+curl --silent --location https://nginx.org/download/nginx-${NGINX}.tar.gz | tar xz -C /usr/src --one-top-level=nginx --strip-components=1 || exit 1
 
 #
 # brotli cargo compile settings
