@@ -46,7 +46,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux
+          name: nginx-http3-${{ matrix.library }}
           path: |
             dist/nginx-http3-${{ matrix.library }}-linux-amd64.tar.xz
             dist/nginx-http3-${{ matrix.library }}-linux-arm64.tar.xz
@@ -62,5 +62,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/nginx-http3-${{ matrix.library }}-linux-amd64.tar.xz
-            dist/nginx-http3-${{ matrix.library }}-linux-arm64.tar.xz
+            dist/nginx-http3-openssl-linux-amd64.tar.xz
+            dist/nginx-http3-openssl-linux-arm64.tar.xz
+            dist/nginx-http3-libressl-linux-amd64.tar.xz
+            dist/nginx-http3-libressl-linux-arm64.tar.xz
