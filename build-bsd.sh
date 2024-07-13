@@ -1,5 +1,8 @@
 #!/bin/sh
 
+BASE_DIR="$(cd "$(dirname "$0")"; pwd)";
+echo "[i] BASE_DIR => $BASE_DIR"
+
 OPENSSL_QUIC_TAG=openssl-3.1.5-quic1
 MODULE_NGINX_HEADERS_MORE=v0.37
 MODULE_NGINX_ECHO=v0.63
@@ -16,41 +19,49 @@ NGINX=1.27.0
 #
 # Module: ngx_brotli
 #
+echo "[i] Downloading: nginx_brotli"
 git clone --depth=1 --recursive --shallow-submodules https://github.com/google/ngx_brotli /usr/src/ngx_brotli || exit 1
 
 #
 # Module: headers-more-nginx-module
 #
+echo "[i] Downloading: headers-more-nginx-module"
 curl --silent --location https://github.com/openresty/headers-more-nginx-module/archive/refs/tags/${MODULE_NGINX_HEADERS_MORE}.tar.gz | gtar xz -C /usr/src --one-top-level=headers-more-nginx-module --strip-components=1 || exit 1
 
 #
 # Module: echo-nginx-module
 #
+echo "[i] Downloading: echo-nginx-module"
 curl --silent --location https://github.com/openresty/echo-nginx-module/archive/refs/tags/${MODULE_NGINX_ECHO}.tar.gz | gtar xz -C /usr/src --one-top-level=echo-nginx-module --strip-components=1 || exit 1
 
 #
 # Module: nginx-module-vts
 #
+echo "[i] Downloading: nginx-module-vts"
 curl --silent --location https://github.com/vozlt/nginx-module-vts/archive/refs/tags/${MODULE_NGINX_VTS}.tar.gz | gtar xz -C /usr/src --one-top-level=nginx-module-vts --strip-components=1 || exit 1
 
 #
 # Module: nginx_cookie_flag_module
 #
+echo "[i] Downloading: nginx_cookie_flag_module"
 curl --silent --location https://github.com/AirisX/nginx_cookie_flag_module/archive/refs/tags/${MODULE_NGINX_COOKIE_FLAG}.tar.gz | gtar xz -C /usr/src --one-top-level=nginx_cookie_flag_module --strip-components=1 || exit 1
 
 #
 # Module: ngx_http_substitutions_filter_module
 #
+echo "[i] Downloading: ngx_http_substitutions_filter_module"
 curl --silent --location https://github.com/yaoweibin/ngx_http_substitutions_filter_module/tarball/master | gtar xz -C /usr/src --one-top-level=ngx_http_substitutions_filter_module --strip-components=1 || exit 1
 
 #
 # Module: njs
 #
+echo "[i] Downloading: njs"
 curl --silent --location https://github.com/nginx/njs/archive/refs/tags/${MODULE_NGINX_NJS}.tar.gz | gtar xz -C /usr/src --one-top-level=njs --strip-components=1 || exit 1
 
 #
 # nginx
 #
+echo "[i] Downloading: nginx"
 curl --silent --location https://nginx.org/download/nginx-${NGINX}.tar.gz | gtar xz -C /usr/src --one-top-level=nginx --strip-components=1 || exit 1
 
 #
@@ -76,6 +87,7 @@ echo $'[net]\ngit-fetch-with-cli = true' > ~/.cargo/config.toml
 #
 # ngx_brotli
 #
+echo "[i] Compiling: nginx_brotli"
 cd /usr/src/ngx_brotli/deps/brotli
 mkdir out && cd out
 cmake \
@@ -93,6 +105,7 @@ cmake \
 #
 # nginx
 #
+echo "[i] Compiling: nginx"
 cd /usr/src/nginx
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
@@ -150,3 +163,5 @@ CXX=/usr/bin/clang++ \
    --without-http_uwsgi_module || cat objs/autoconf.err
 make -j$(getconf _NPROCESSORS_ONLN) || exit 1
 make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
+
+tar -C /usr/local/sbin -Jcvf ${BASE_DIR}/nginx-http3-openssl-freebsd.tar.xz nginx

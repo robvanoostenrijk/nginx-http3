@@ -56,18 +56,19 @@ jobs:
   freebsd:
     runs-on: ubuntu-latest
     name: Build FreeBSD version
-    env:
-      MYTOKEN : ${{ secrets.MYTOKEN }}
-      MYTOKEN2: "value2"
     steps:
       - name: Checkout from GitHub
         uses: actions/checkout@v4
       - uses: vmactions/freebsd-vm@v1
         with:
+          release: "13.2"
           usesh: true
           prepare: |
             pkg install -y cmake git gtar libxml2 libxslt pcre2 rust
           run: |
-            cp build-bsd.sh /usr/src
-            cd /usr/src
             ./build-bsd.sh
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            nginx-http3-openssl-freebsd.tar.xz
