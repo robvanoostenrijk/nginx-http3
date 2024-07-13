@@ -1,6 +1,9 @@
 name: Build container(s) & Upload Artifacts
 
-on: push
+on:
+  push:
+    tags:
+      - '*'
 
 jobs:
   build-container-and-deploy:
@@ -43,26 +46,28 @@ jobs:
       - name: Extract docker build artifacts
         run: |
           ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: nginx-http3-${{ matrix.library }}
-          path: |
-            dist/nginx-http3-${{ matrix.library }}-linux-amd64.tar.xz
-            dist/nginx-http3-${{ matrix.library }}-linux-arm64.tar.xz
-
-  release:
-    runs-on: ubuntu-latest
-    needs:
-      - build-container-and-deploy
-    steps:
-      - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v4
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/nginx-http3-openssl-linux-amd64.tar.xz
-            dist/nginx-http3-openssl-linux-arm64.tar.xz
-            dist/nginx-http3-libressl-linux-amd64.tar.xz
-            dist/nginx-http3-libressl-linux-arm64.tar.xz
+            dist/nginx-http3-${{ matrix.library }}-linux-amd64.tar.xz
+            dist/nginx-http3-${{ matrix.library }}-linux-arm64.tar.xz
+
+  freebsd:
+    runs-on: ubuntu-latest
+    name: Build FreeBSD version
+    env:
+      MYTOKEN : ${{ secrets.MYTOKEN }}
+      MYTOKEN2: "value2"
+    steps:
+      - name: Checkout from GitHub
+        uses: actions/checkout@v4
+      - uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg install -y cmake git gtar libxml2 libxslt pcre2 rust
+          run: |
+            cp build-bsd.sh /usr/src
+            cd /usr/src
+            ./build-bsd.sh
