@@ -1,9 +1,6 @@
 name: Build container(s) & Upload Artifacts
 
-on:
-  push:
-    tags:
-      - '*'
+on: push
 
 jobs:
   build-container-and-deploy:
