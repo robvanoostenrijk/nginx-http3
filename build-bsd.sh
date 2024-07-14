@@ -11,10 +11,13 @@ MODULE_NGINX_COOKIE_FLAG=v1.1.0
 MODULE_NGINX_NJS=0.8.4
 NGINX=1.27.0
 
+find /usr/src -maxdepth 1 -mindepth 1 -type d -exec rm -rf {} \;
+
 #
 # OpenSSL library (with QUIC support)
 #
-#curl --silent --location https://github.com/quictls/openssl/archive/refs/tags/${OPENSSL_QUIC_TAG}.tar.gz | gtar xz -C /usr/src --one-top-level=openssl --strip-components=1 || exit 1
+echo "[i] Downloading: OpenSSL+quic"
+curl --silent --location https://github.com/quictls/openssl/archive/refs/tags/${OPENSSL_QUIC_TAG}.tar.gz | gtar xz -C /usr/src --one-top-level=openssl --strip-components=1 || exit 1
 
 #
 # Module: ngx_brotli
@@ -65,24 +68,12 @@ echo "[i] Downloading: nginx"
 curl --silent --location https://nginx.org/download/nginx-${NGINX}.tar.gz | gtar xz -C /usr/src --one-top-level=nginx --strip-components=1 || exit 1
 
 #
-# brotli cargo compile settings
-#
-mkdir -p ~/.cargo
-echo $'[net]\ngit-fetch-with-cli = true' > ~/.cargo/config.toml
-
-#
 # OpenSSL+quic1
 #
-#cd /usr/src/openssl
-#CC=clang ./Configure no-tests BSD-x86_64
-#make -j$(getconf _NPROCESSORS_ONLN) && make install_sw || exit 1
-#SSL_COMMIT="${OPENSSL_QUIC_TAG}"
-
-#
-# zlib-cloudflare
-#
-#cd /usr/src/zlib
-#./configure --static
+echo "[i] Compiling: OpenSSL+quic"
+cd /usr/src/openssl
+CC=clang ./Configure no-tests BSD-x86_64
+SSL_COMMIT="${OPENSSL_QUIC_TAG}"
 
 #
 # ngx_brotli
@@ -126,8 +117,8 @@ CXX=/usr/bin/clang++ \
    --http-scgi-temp-path=/var/tmp/nginx/scgi_temp \
    --user=www \
    --group=www \
-   --with-cc-opt="-I /usr/local/include" \
-   --with-ld-opt="-L /usr/local/lib" \
+   --with-cc-opt="-I /usr/src/libxml2 -I /usr/local/include" \
+   --with-ld-opt="-L /usr/src/libxml2 -L /usr/local/lib" \
    --with-http_addition_module \
    --with-http_auth_request_module \
    --with-http_dav_module \
@@ -145,6 +136,7 @@ CXX=/usr/bin/clang++ \
    --with-http_v2_module \
    --with-http_v3_module \
    --with-http_xslt_module \
+   --with-openssl=/usr/src/openssl \
    --with-poll_module \
    --with-select_module \
    --with-zlib-asm=CPU \
@@ -162,6 +154,5 @@ CXX=/usr/bin/clang++ \
    --without-http_scgi_module \
    --without-http_uwsgi_module || cat objs/autoconf.err
 make -j$(getconf _NPROCESSORS_ONLN) || exit 1
-make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
 
-tar -C /usr/local/sbin -Jcvf ${BASE_DIR}/nginx-http3-openssl-freebsd.tar.xz nginx
+tar -C /usr/src/nginx/objs -Jcvf ${BASE_DIR}/nginx-http3-openssl-freebsd.tar.xz nginx
