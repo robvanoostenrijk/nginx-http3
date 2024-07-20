@@ -8,6 +8,7 @@ ARG SSL_LIBRARY=openssl
 
 ENV OPENSSL_QUIC_TAG=openssl-3.1.5-quic1 \
     LIBRESSL_TAG=v3.9.2 \
+    AWS_LC_TAG=v1.32.0 \
     LIBXML2=v2.12.7 \
     LIBXSLT=v1.1.39 \
     MODULE_NGINX_HEADERS_MORE=v0.37 \
@@ -73,6 +74,11 @@ if [ "${SSL_LIBRARY}" = "openssl" ]; then curl --silent --location https://githu
 if [ "${SSL_LIBRARY}" = "libressl" ]; then curl --silent --location https://github.com/libressl-portable/portable/archive/refs/tags/${LIBRESSL_TAG}.tar.gz | tar xz -C /usr/src --one-top-level=libressl --strip-components=1 || exit 1; fi
 
 #
+# AWS-LC
+#
+if [ "${SSL_LIBRARY}" = "aws-lc" ]; then curl --silent --location https://github.com/aws/aws-lc/archive/refs/tags/${AWS_LC_TAG}.tar.gz | tar xz -C /usr/src --one-top-level=aws-lc --strip-components=1; fi
+
+#
 # Cloudflare enhanced zlib
 #
 curl --silent --location https://github.com/cloudflare/zlib/tarball/gcc.amd64 | tar xz -C /usr/src --one-top-level=zlib --strip-components=1 || exit 1
@@ -127,6 +133,7 @@ curl --silent --location https://github.com/nginx/njs/archive/refs/tags/${MODULE
 #
 #curl --silent --location https://hg.nginx.org/nginx-quic/archive/${NGINX_QUIC_COMMIT}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-quic --strip-components=1 || exit 1
 curl --silent --location https://nginx.org/download/nginx-${NGINX}.tar.gz | tar xz -C /usr/src --one-top-level=nginx --strip-components=1 || exit 1
+curl --silent --location -o /usr/src/aws-lc-nginx.patch https://raw.githubusercontent.com/aws/aws-lc/main/tests/ci/integration/nginx_patch/aws-lc-nginx.patch || exit 1
 
 #
 # brotli cargo compile settings
@@ -156,6 +163,23 @@ if [ "${SSL_LIBRARY}" = "libressl" ]; then
     --enable-static
   make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
   SSL_COMMIT="libressl-${LIBRESSL_TAG}"
+fi
+
+#
+# AWS-LC
+#
+if [ "${SSL_LIBRARY}" = "aws-lc" ]; then
+  mkdir -p /usr/src/aws-lc/build
+  cd /usr/src/aws-lc/build
+  CC=clang CXX=clang++ cmake \
+    -GNinja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DCMAKE_INSTALL_PREFIX=../install \
+    ..
+  cmake --build .
+  cmake --install .
+  SSL_COMMIT="AWS-LC-${AWS_LC_TAG}"
 fi
 
 #
@@ -233,6 +257,7 @@ make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
 cd /usr/src/nginx
 patch -p1 < /usr/src/nginx_dynamic_tls_records.patch || exit 1
 patch -p1 < /usr/src/use_openssl_md5_sha1.patch || exit 1
+patch -p1 < /usr/src/aws-lc-nginx.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
@@ -250,7 +275,7 @@ CXX=/usr/bin/clang++ \
    --http-scgi-temp-path=/var/lib/nginx/tmp/scgi \
    --user=nginx \
    --group=nginx \
-   --with-cc-opt="-O3 -static -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable" \
+   --with-cc-opt="-I/usr/src/aws-lc/install/include -O3 -static -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable" \
    --with-compat \
    --with-file-aio \
    --with-http_addition_module \
@@ -270,7 +295,7 @@ CXX=/usr/bin/clang++ \
    --with-http_v2_module \
    --with-http_v3_module \
    --with-http_xslt_module \
-   --with-ld-opt="-w -s -static -lexslt -lxslt -lxml2" \
+   --with-ld-opt="-L/usr/src/aws-lc/install/lib -w -s -static -lexslt -lxslt -lxml2" \
    --with-pcre-jit \
    --with-pcre-opt="-O3" \
    --with-poll_module \

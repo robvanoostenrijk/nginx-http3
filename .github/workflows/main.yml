@@ -12,6 +12,7 @@ jobs:
     strategy:
       matrix:
         library:
+          - aws-lc
           - libressl
           - openssl
     steps:
