@@ -9,8 +9,6 @@ ARG SSL_LIBRARY=openssl
 ENV OPENSSL_QUIC_TAG=openssl-3.1.5-quic1 \
     LIBRESSL_TAG=v3.9.2 \
     AWS_LC_TAG=v1.32.0 \
-    LIBXML2=v2.12.7 \
-    LIBXSLT=v1.1.39 \
     MODULE_NGINX_HEADERS_MORE=v0.37 \
     MODULE_NGINX_ECHO=v0.63 \
     MODULE_NGINX_VTS=v0.2.2 \
@@ -41,10 +39,18 @@ apk add --no-cache --virtual .build-deps \
   go \
   libtool \
   linux-headers \
+  libxml2-dev \
+  libxml2-static \
+  libxslt-dev \
+  libxslt-static \
+  m4 \
   make \
   patch \
+  perl \
   pcre2-dev \
-  samurai
+  samurai \
+  xz-static \
+  zlib-static
 
 #
 # Prepare destination scratchfs
@@ -82,16 +88,6 @@ if [ "${SSL_LIBRARY}" = "aws-lc" ]; then curl --silent --location https://github
 # Cloudflare enhanced zlib
 #
 curl --silent --location https://github.com/cloudflare/zlib/tarball/gcc.amd64 | tar xz -C /usr/src --one-top-level=zlib --strip-components=1 || exit 1
-
-#
-# Library: libxml2
-#
-curl --silent --location https://gitlab.gnome.org/GNOME/libxml2/-/archive/${LIBXML2}/libxml2-${LIBXML2}.tar.gz | tar xz -C /usr/src || exit 1
-
-#
-# Library: libxslt
-#
-curl --silent --location https://gitlab.gnome.org/GNOME/libxslt/-/archive/${LIBXSLT}/libxslt-${LIBXSLT}.tar.gz | tar xz -C /usr/src || exit 1
 
 #
 # Module: ngx_brotli
@@ -138,8 +134,8 @@ curl --silent --location -o /usr/src/aws-lc-nginx.patch https://raw.githubuserco
 #
 # brotli cargo compile settings
 #
-mkdir -p /root/.cargo
-echo $'[net]\ngit-fetch-with-cli = true' > /root/.cargo/config.toml
+#mkdir -p /root/.cargo
+#echo $'[net]\ngit-fetch-with-cli = true' > /root/.cargo/config.toml
 
 #
 # OpenSSL+quic1
@@ -206,52 +202,6 @@ cmake \
      --target brotlienc
 
 #
-# libxml2
-#
-cd /usr/src/libxml2-${LIBXML2}
-./autogen.sh \
-  --prefix="/usr" \
-  --disable-shared \
-  --enable-static \
-  --without-catalog \
-  --without-debug \
-  --without-http \
-  --without-iconv \
-  --without-iso8859x \
-  --without-lzma \
-  --without-modules \
-  --without-pattern \
-  --without-python \
-  --without-reader \
-  --without-regexps \
-  --without-sax1 \
-  --without-schemas \
-  --without-schematron \
-  --without-writer \
-  --without-xinclude \
-  --without-xptr \
-  --without-zlib
-make -j$(getconf _NPROCESSORS_ONLN) || exit 1
-make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
-
-#
-# libxslt
-#
-cd /usr/src/libxslt-${LIBXSLT}
-./autogen.sh \
-  --prefix="/usr" \
-  --disable-shared \
-  --enable-static \
-  --without-crypto \
-  --without-debug \
-  --without-debugger \
-  --without-plugins \
-  --without-profiler \
-  --without-python
-make -j$(getconf _NPROCESSORS_ONLN) || exit 1
-make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
-
-#
 # nginx
 #
 cd /usr/src/nginx
@@ -275,7 +225,7 @@ CXX=/usr/bin/clang++ \
    --http-scgi-temp-path=/var/lib/nginx/tmp/scgi \
    --user=nginx \
    --group=nginx \
-   --with-cc-opt="-I/usr/src/aws-lc/install/include -O3 -static -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable" \
+   --with-cc-opt="-I/usr/include/libxml2 -I/usr/src/aws-lc/install/include -O3 -static -Wno-sign-compare -Wno-conditional-uninitialized -Wno-unused-but-set-variable" \
    --with-compat \
    --with-file-aio \
    --with-http_addition_module \
@@ -295,7 +245,7 @@ CXX=/usr/bin/clang++ \
    --with-http_v2_module \
    --with-http_v3_module \
    --with-http_xslt_module \
-   --with-ld-opt="-L/usr/src/aws-lc/install/lib -w -s -static -lexslt -lxslt -lxml2" \
+   --with-ld-opt="-L/usr/src/aws-lc/install/lib -w -s -static -lexslt -lxslt -lxml2 -lz -llzma" \
    --with-pcre-jit \
    --with-pcre-opt="-O3" \
    --with-poll_module \
