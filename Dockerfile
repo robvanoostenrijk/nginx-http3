@@ -24,8 +24,9 @@ RUN <<EOF
 
 set -x
 echo "Compiling for SSL_LIBRARY: ${SSL_LIBRARY}"
+sed -i -r 's/v\d+\.\d+/edge/g' /etc/apk/repositories
 apk update
-apk upgrade
+apk upgrade --no-interactive --latest
 apk add --no-cache ca-certificates openssl tar xz
 apk add --no-cache --virtual .build-deps \
   autoconf \
