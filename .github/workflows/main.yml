@@ -54,3 +54,23 @@ jobs:
           files: |
             dist/nginx-http3-${{ matrix.library }}-linux-amd64.tar.xz
             dist/nginx-http3-${{ matrix.library }}-linux-arm64.tar.xz
+
+  freebsd:
+    runs-on: ubuntu-latest
+    name: Build FreeBSD version
+    steps:
+      - name: Checkout from GitHub
+        uses: actions/checkout@v4
+      - uses: vmactions/freebsd-vm@v1
+        with:
+          release: "13.2"
+          usesh: true
+          prepare: |
+            pkg install -y cmake git gtar libxml2 libxslt pcre2 rust
+          run: |
+            ./build-bsd.sh
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            nginx-http3-aws-lc-freebsd.tar.xz
