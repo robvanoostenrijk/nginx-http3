@@ -66,11 +66,11 @@ jobs:
           release: "13.2"
           usesh: true
           prepare: |
-            pkg install -y cmake git gtar libxml2 libxslt pcre2 rust
+            pkg install -y cmake git go gtar libxml2 libxslt pcre2 rust samurai
           run: |
-            ./build-bsd.sh
+            ./build-freebsd.sh
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            nginx-http3-aws-lc-freebsd.tar.xz
+            nginx-http3-aws-lc-freebsd-amd64.tar.xz

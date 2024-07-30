@@ -81,6 +81,9 @@ CC=clang CXX=clang++ cmake \
   ..
 cmake --build .
 cmake --install .
+mkdir -p /usr/src/aws-lc/install/.openssl/lib /usr/src/aws-lc/install/.openssl/include
+ln -sf /usr/src/aws-lc/install/include/openssl /usr/src/aws-lc/install/.openssl/include/openssl
+cp /usr/src/aws-lc/install/lib/libcrypto.a /usr/src/aws-lc/install/lib/libssl.a /usr/src/aws-lc/install/.openssl/lib
 SSL_COMMIT="AWS-LC-${AWS_LC_TAG}"
 
 #
@@ -92,8 +95,8 @@ mkdir out && cd out
 cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_SHARED_LIBS=OFF \
-    -DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects -Wl,--gc-sections" \
-    -DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects -Wl,--gc-sections" \
+    -DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections" \
+    -DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections" \
     -DCMAKE_INSTALL_PREFIX=./installed \
     ..
 cmake \
@@ -163,4 +166,4 @@ CXX=/usr/bin/clang++ \
    --without-http_uwsgi_module || cat objs/autoconf.err
 make -j$(getconf _NPROCESSORS_ONLN) || exit 1
 
-tar -C /usr/src/nginx/objs -Jcvf ${BASE_DIR}/nginx-http3-aws-lc-freebsd.tar.xz nginx
+tar -C /usr/src/nginx/objs -Jcvf ${BASE_DIR}/nginx-http3-aws-lc-freebsd-amd64.tar.xz nginx
