@@ -3,7 +3,7 @@
 BASE_DIR="$(cd "$(dirname "$0")"; pwd)";
 echo "[i] BASE_DIR => $BASE_DIR"
 
-AWS_LC_TAG=v1.32.0
+AWS_LC_TAG=v1.33.0
 MODULE_NGINX_HEADERS_MORE=v0.37
 MODULE_NGINX_ECHO=v0.63
 MODULE_NGINX_VTS=v0.2.2
@@ -165,5 +165,9 @@ CXX=/usr/bin/clang++ \
    --without-http_scgi_module \
    --without-http_uwsgi_module || cat objs/autoconf.err
 make -j$(getconf _NPROCESSORS_ONLN) || exit 1
+
+ls -lh /usr/src/nginx/objs/nginx
+file /usr/src/nginx/objs/nginx
+/usr/src/nginx/objs/nginx -vv
 
 tar -C /usr/src/nginx/objs -Jcvf ${BASE_DIR}/nginx-http3-aws-lc-freebsd-amd64.tar.xz nginx
