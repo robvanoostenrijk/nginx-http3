@@ -14,7 +14,7 @@ ENV OPENSSL_QUIC_TAG=openssl-3.1.5-quic1 \
     MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
     MODULE_NGINX_NJS=0.8.4 \
-    NGINX=1.27.0
+    NGINX=1.27.1
 
 COPY --link ["nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
 COPY --link ["use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
