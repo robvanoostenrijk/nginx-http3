@@ -9,11 +9,13 @@ ARG SSL_LIBRARY=openssl
 ENV OPENSSL_QUIC_TAG=openssl-3.1.5-quic1 \
     LIBRESSL_TAG=v3.9.2 \
     AWS_LC_TAG=v1.34.1 \
-    MODULE_NGINX_HEADERS_MORE=v0.37 \
-    MODULE_NGINX_ECHO=v0.63 \
-    MODULE_NGINX_VTS=v0.2.2 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
+    MODULE_NGINX_DEVEL_KIT=v0.3.3 \
+    MODULE_NGINX_ECHO=v0.63 \
+    MODULE_NGINX_HEADERS_MORE=v0.37 \
+    MODULE_NGINX_MISC=v0.33 \
     MODULE_NGINX_NJS=0.8.4 \
+    MODULE_NGINX_VTS=v0.2.2 \
     NGINX=1.27.1
 
 COPY --link ["nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
@@ -96,9 +98,14 @@ curl --silent --location https://github.com/cloudflare/zlib/tarball/gcc.amd64 | 
 git clone --depth=1 --recursive --shallow-submodules https://github.com/google/ngx_brotli /usr/src/ngx_brotli || exit 1
 
 #
-# Module: headers-more-nginx-module
+# Module: nginx_cookie_flag_module
 #
-curl --silent --location https://github.com/openresty/headers-more-nginx-module/archive/refs/tags/${MODULE_NGINX_HEADERS_MORE}.tar.gz | tar xz -C /usr/src --one-top-level=headers-more-nginx-module --strip-components=1 || exit 1
+curl --silent --location https://github.com/AirisX/nginx_cookie_flag_module/archive/refs/tags/${MODULE_NGINX_COOKIE_FLAG}.tar.gz | tar xz -C /usr/src --one-top-level=nginx_cookie_flag_module --strip-components=1 || exit 1
+
+#
+# Module: ngx_devel_kit
+#
+curl --silent --location https://github.com/vision5/ngx_devel_kit/archive/refs/tags/${MODULE_NGINX_DEVEL_KIT}.tar.gz | tar xz -C /usr/src --one-top-level=ngx_devel_kit --strip-components=1 || exit 1
 
 #
 # Module: echo-nginx-module
@@ -106,14 +113,19 @@ curl --silent --location https://github.com/openresty/headers-more-nginx-module/
 curl --silent --location https://github.com/openresty/echo-nginx-module/archive/refs/tags/${MODULE_NGINX_ECHO}.tar.gz | tar xz -C /usr/src --one-top-level=echo-nginx-module --strip-components=1 || exit 1
 
 #
+# Module: headers-more-nginx-module
+#
+curl --silent --location https://github.com/openresty/headers-more-nginx-module/archive/refs/tags/${MODULE_NGINX_HEADERS_MORE}.tar.gz | tar xz -C /usr/src --one-top-level=headers-more-nginx-module --strip-components=1 || exit 1
+
+#
+# Module: set-misc-nginx-module
+#
+curl --silent --location https://github.com/openresty/set-misc-nginx-module/archive/refs/tags/${MODULE_NGINX_MISC}.tar.gz | tar xz -C /usr/src --one-top-level=set-misc-nginx-module --strip-components=1 || exit 1
+
+#
 # Module: nginx-module-vts
 #
 curl --silent --location https://github.com/vozlt/nginx-module-vts/archive/refs/tags/${MODULE_NGINX_VTS}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-module-vts --strip-components=1 || exit 1
-
-#
-# Module: nginx_cookie_flag_module
-#
-curl --silent --location https://github.com/AirisX/nginx_cookie_flag_module/archive/refs/tags/${MODULE_NGINX_COOKIE_FLAG}.tar.gz | tar xz -C /usr/src --one-top-level=nginx_cookie_flag_module --strip-components=1 || exit 1
 
 #
 # Module: ngx_http_substitutions_filter_module
@@ -212,7 +224,7 @@ patch -p1 < /usr/src/aws-lc-nginx.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
-   --build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx_cookie_flag_module-${MODULE_NGINX_COOKIE_FLAG} njs-${MODULE_NGINX_NJS} ngx_http_substitutions_filter_module-latest" \
+   --build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx-cookie-flag-module-${MODULE_NGINX_COOKIE_FLAG} set-misc-nginx-module-${MODULE_NGINX_HEADERS_MORE} njs-${MODULE_NGINX_NJS} ngx-http-substitutions-filter-module-latest" \
    --prefix=/var/lib/nginx \
    --sbin-path=/usr/sbin/nginx \
    --modules-path=/usr/lib/nginx/modules \
@@ -255,6 +267,7 @@ CXX=/usr/bin/clang++ \
    --with-zlib-asm=CPU \
    --with-zlib-opt="-O3" \
    --with-zlib=/usr/src/zlib \
+   --add-module=/usr/src/ngx_devel_kit \
    --add-module=/usr/src/echo-nginx-module \
    --add-module=/usr/src/headers-more-nginx-module \
    --add-module=/usr/src/nginx_cookie_flag_module \
@@ -262,6 +275,7 @@ CXX=/usr/bin/clang++ \
    --add-module=/usr/src/ngx_brotli \
    --add-module=/usr/src/ngx_http_substitutions_filter_module \
    --add-module=/usr/src/njs/nginx \
+   --add-module=/usr/src/set-misc-nginx-module \
    --without-http_browser_module \
    --without-http_grpc_module \
    --without-http_mirror_module \
