@@ -6,7 +6,7 @@ FROM alpine:latest AS builder
 
 ARG SSL_LIBRARY=openssl
 
-ENV OPENSSL_QUIC_TAG=openssl-3.1.6-quic1 \
+ENV OPENSSL_TAG=openssl-3.3.2 \
     LIBRESSL_TAG=v3.9.2 \
     AWS_LC_TAG=v1.36.0 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
@@ -75,7 +75,7 @@ mkdir -p /usr/src
 #
 # OpenSSL library (with QUIC support)
 #
-if [ "${SSL_LIBRARY}" = "openssl" ]; then curl --silent --location https://github.com/quictls/openssl/archive/refs/tags/${OPENSSL_QUIC_TAG}.tar.gz | tar xz -C /usr/src --one-top-level=openssl --strip-components=1 || exit 1; fi
+if [ "${SSL_LIBRARY}" = "openssl" ]; then curl --silent --location https://github.com/openssl/openssl/archive/refs/tags/${OPENSSL_TAG}.tar.gz | tar xz -C /usr/src --one-top-level=openssl --strip-components=1 || exit 1; fi
 
 #
 # LibreSSL
@@ -151,13 +151,13 @@ curl --silent --location -o /usr/src/aws-lc-nginx.patch https://raw.githubuserco
 #echo $'[net]\ngit-fetch-with-cli = true' > /root/.cargo/config.toml
 
 #
-# OpenSSL+quic1
+# OpenSSL
 #
 if [ "${SSL_LIBRARY}" = "openssl" ]; then
   cd /usr/src/openssl
   CC=clang ./Configure no-shared no-tests linux-generic64
   make -j$(getconf _NPROCESSORS_ONLN) && make install_sw || exit 1
-  SSL_COMMIT="${OPENSSL_QUIC_TAG}"
+  SSL_COMMIT="${OPENSSL_TAG}"
 fi
 
 #
