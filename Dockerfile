@@ -16,7 +16,7 @@ ENV OPENSSL_TAG=openssl-3.3.2 \
     MODULE_NGINX_MISC=v0.33 \
     MODULE_NGINX_NJS=0.8.4 \
     MODULE_NGINX_VTS=v0.2.2 \
-    NGINX=1.27.1
+    NGINX=1.27.2
 
 COPY --link ["nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
 COPY --link ["use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
