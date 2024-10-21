@@ -48,7 +48,7 @@ jobs:
       - name: Extract docker build artifacts
         run: |
           ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
-          docker run --platform linux/amd64 --rm --entrypoint "/usr/sbin/nginx" "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" -v > dist/version.txt
+          docker run --platform linux/amd64 --rm --log-driver=none -a stdout -a stderr --entrypoint "/usr/sbin/nginx" "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" -v > dist/version.txt
       - name: Upload artifacts 
         uses: actions/upload-artifact@v4
         with:
@@ -111,7 +111,7 @@ jobs:
 
           for library in ${libraries[@]}; do
             for platform in ${platforms[@]}; do
-              echo "    nginx-${library}-${platform}: $(sha256sum ./nginx-${library}/nginx-http3-${library}-${platform}.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
+              echo "    nginx-${library}-${platform}.tar.xz: $(sha256sum ./nginx-${library}/nginx-http3-${library}-${platform}.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
             done
 
             echo "" >> ./release.txt
