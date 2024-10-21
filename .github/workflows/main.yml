@@ -1,4 +1,4 @@
-name: Build container(s) & Upload Artifacts
+name: Build release containers and create binary release
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - '*'
 
 jobs:
-  build-container-and-deploy:
+  build-linux-containers:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     strategy:
@@ -38,7 +38,7 @@ jobs:
           [ "$VERSION" == "main" ] && VERSION=latest
           echo "VERSION=${VERSION}-${{ matrix.library }}" >> $GITHUB_ENV
       - name: Build and push
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           build-args: SSL_LIBRARY=${{ matrix.library }}
           context: .
@@ -48,22 +48,25 @@ jobs:
       - name: Extract docker build artifacts
         run: |
           ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
-          `docker run --platform linux/amd64 --rm --entrypoint "/usr/sbin/nginx" "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" -v` > /tmp/release.txt
-      - name: Release
-        uses: softprops/action-gh-release@v1
+          `docker run --platform linux/amd64 --rm --entrypoint "/usr/sbin/nginx" "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" -v` > dist/version.txt
+      - name: Upload artifacts 
+        uses: actions/upload-artifact@v4
         with:
-          body_path: /tmp/release.txt
-          files: |
+          name: nginx-${{ matrix.library }}
+          path: |
             dist/nginx-http3-${{ matrix.library }}-linux-amd64.tar.xz
             dist/nginx-http3-${{ matrix.library }}-linux-arm64.tar.xz
+            dist/version.txt            
+          retention-days: 1
 
-  freebsd:
+  build-freebsd:
     runs-on: ubuntu-latest
     name: Build FreeBSD version
     steps:
       - name: Checkout from GitHub
         uses: actions/checkout@v4
-      - uses: vmactions/freebsd-vm@v1
+      - name: Build on FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
         with:
           release: "13.2"
           usesh: true
@@ -71,8 +74,22 @@ jobs:
             pkg install -y cmake git go gtar libxml2 libxslt pcre2 rust samurai
           run: |
             ./build-freebsd.sh
-      - name: Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload artifacts 
+        uses: actions/upload-artifact@v4
         with:
-          files: |
+          name: nginx-freebsd
+          path: |
             nginx-http3-aws-lc-freebsd-amd64.tar.xz
+          retention-days: 1
+
+  release:
+    needs:
+      - build-freebsd
+      - build-linux-containers
+    runs-on: ubuntu-latest
+    name: Create Release
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+      - name: Display structure of downloaded files
+        run: ls -R
