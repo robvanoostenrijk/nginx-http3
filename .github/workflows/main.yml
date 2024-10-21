@@ -48,6 +48,8 @@ jobs:
       - name: Extract docker build artifacts
         run: |
           ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
+          `docker run --platform ${PLATFORM} --rm --entrypoint "/usr/sbin/nginx" ghcr.io/${{ github.repository }} -v` > /tmp/release.txt
+          cat /tmp/release.txt
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
