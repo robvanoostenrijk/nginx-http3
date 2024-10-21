@@ -48,11 +48,11 @@ jobs:
       - name: Extract docker build artifacts
         run: |
           ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
-          `docker run --rm --entrypoint "/usr/sbin/nginx" "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" -v` > /tmp/release.txt
-          cat /tmp/release.txt
+          `docker run --platform linux/amd64 --rm --entrypoint "/usr/sbin/nginx" "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" -v` > /tmp/release.txt
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
+          body_path: /tmp/release.txt
           files: |
             dist/nginx-http3-${{ matrix.library }}-linux-amd64.tar.xz
             dist/nginx-http3-${{ matrix.library }}-linux-arm64.tar.xz
