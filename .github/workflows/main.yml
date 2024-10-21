@@ -48,7 +48,7 @@ jobs:
       - name: Extract docker build artifacts
         run: |
           ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
-          `docker run --platform linux/amd64 --rm --entrypoint "/usr/sbin/nginx" "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" -v` > dist/version.txt
+          docker run --platform linux/amd64 --rm --entrypoint "/usr/sbin/nginx" "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" -v > dist/version.txt
       - name: Upload artifacts 
         uses: actions/upload-artifact@v4
         with:
@@ -56,7 +56,7 @@ jobs:
           path: |
             dist/nginx-http3-${{ matrix.library }}-linux-amd64.tar.xz
             dist/nginx-http3-${{ matrix.library }}-linux-arm64.tar.xz
-            dist/version.txt            
+            dist/version.txt
           retention-days: 1
 
   build-freebsd:
@@ -93,5 +93,40 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: nginx-*
-      - name: Display structure of downloaded files
-        run: ls -R
+      - name: Release Text
+        shell: bash
+        run: |
+          platforms=("linux-amd64" "linux-arm64")
+          libraries=("aws-lc" "libressl" "openssl")
+
+          echo "#### Versions:" > ./release.txt
+
+          for library in ${libraries[@]}; do
+            echo "    nginx-${library}: $(cat ./nginx-${library}/version.txt)" >> ./release.txt
+            echo "" >> ./release.txt
+          done
+
+          echo "" >> ./release.txt
+          echo "#### SHA256 Checksums:" >> ./release.txt
+
+          for library in ${libraries[@]}; do
+            for platform in ${platforms[@]}; do
+              echo "    nginx-${library}-${platform}: $(sha256sum ./nginx-${library}/nginx-http3-${library}-${platform}.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
+            done
+
+            echo "" >> ./release.txt
+          done
+
+          echo "    nginx-aws-lc-freebsd-amd64: $(sha256sum ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: ./release.txt
+          files: |
+            ./nginx-aws-lc/nginx-http3-aws-lc-linux-amd64.tar.xz
+            ./nginx-aws-lc/nginx-http3-aws-lc-linux-arm64.tar.xz
+            ./nginx-libressl/nginx-http3-libressl-linux-amd64.tar.xz
+            ./nginx-libressl/nginx-http3-libressl-linux-arm64.tar.xz
+            ./nginx-openssl/nginx-http3-openssl-linux-amd64.tar.xz
+            ./nginx-openssl/nginx-http3-openssl-linux-arm64.tar.xz
+            ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz
