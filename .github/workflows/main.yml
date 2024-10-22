@@ -99,7 +99,9 @@ jobs:
           platforms=("linux-amd64" "linux-arm64")
           libraries=("aws-lc" "libressl" "openssl")
 
-          echo "#### Versions:" > ./release.txt
+          git log -1 --no-merges --pretty=%B > ./release.txt
+
+          echo "#### Versions:" >> ./release.txt
 
           for library in ${libraries[@]}; do
             echo " - nginx-${library}" >> ./release.txt
