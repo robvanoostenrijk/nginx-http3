@@ -8,6 +8,9 @@ echo "[i] Clean dist folder"
 rm -f -R ./dist
 mkdir -p ./dist
 
+echo "[i] Grab version information"
+docker run --rm -a stdout -a stderr --entrypoint "/usr/sbin/nginx" "${IMAGE}:${VERSION}" -v 2&> ./dist/version.txt
+
 for PLATFORM in linux/amd64 linux/arm64
 do
     CONTAINER=$(docker create --platform ${PLATFORM} "${IMAGE}:${VERSION}")

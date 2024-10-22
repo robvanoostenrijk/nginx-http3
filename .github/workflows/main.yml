@@ -29,6 +29,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Determine Image Version
+        shell: bash
         run: |
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
@@ -46,9 +47,9 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}:${{ matrix.library }},ghcr.io/${{ github.repository }}:${{ env.VERSION }}
       - name: Extract docker build artifacts
+        shell: bash
         run: |
           ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
-          docker run --platform linux/amd64 --rm --log-driver=none -a stdout -a stderr --entrypoint "/usr/sbin/nginx" "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" -v 2&> dist/version.txt
       - name: Upload artifacts 
         uses: actions/upload-artifact@v4
         with:
@@ -74,7 +75,7 @@ jobs:
             pkg install -y cmake git go gtar libxml2 libxslt pcre2 rust samurai
           run: |
             ./build-freebsd.sh
-      - name: Upload artifacts 
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: nginx-freebsd
