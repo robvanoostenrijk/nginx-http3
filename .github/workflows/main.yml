@@ -8,6 +8,7 @@ on:
 jobs:
   build-linux-containers:
     runs-on: ubuntu-latest
+    name: Build Linux Containers
     if: github.event_name == 'push'
     strategy:
       matrix:
