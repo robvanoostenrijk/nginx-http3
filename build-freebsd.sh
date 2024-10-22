@@ -185,5 +185,5 @@ file /usr/src/nginx/objs/nginx
 /usr/src/nginx/objs/nginx -v
 
 # Generate artifacts
-/usr/src/nginx/objs/nginx -v 2&> ${BASE_DIR}/version.txt
+/usr/src/nginx/objs/nginx -v 2> ${BASE_DIR}/version.txt
 tar -C /usr/src/nginx/objs -Jcvf ${BASE_DIR}/nginx-http3-aws-lc-freebsd-amd64.tar.xz nginx
