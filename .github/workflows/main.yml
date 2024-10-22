@@ -48,7 +48,7 @@ jobs:
       - name: Extract docker build artifacts
         run: |
           ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
-          docker run --platform linux/amd64 --rm --log-driver=none -a stdout -a stderr --entrypoint "/usr/sbin/nginx" "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" -v > dist/version.txt
+          docker run --platform linux/amd64 --rm --log-driver=none -a stdout -a stderr --entrypoint "/usr/sbin/nginx" "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" -v 2&> dist/version.txt
       - name: Upload artifacts 
         uses: actions/upload-artifact@v4
         with:
@@ -102,11 +102,13 @@ jobs:
           echo "#### Versions:" > ./release.txt
 
           for library in ${libraries[@]}; do
-            echo "    nginx-${library}: $(cat ./nginx-${library}/version.txt)" >> ./release.txt
-            echo "" >> ./release.txt
+            echo " - nginx-${library}" >> ./release.txt
+            echo "    \\\`$(cat ./nginx-${library}/version.txt)\\\`" >> ./release.txt
           done
 
-          echo "" >> ./release.txt
+          echo " - nginx-freebsd" >> ./release.txt
+          echo "    \\\`$(cat ./nginx-freebsd/version.txt)\\\`" >> ./release.txt
+
           echo "#### SHA256 Checksums:" >> ./release.txt
 
           for library in ${libraries[@]}; do
@@ -117,7 +119,7 @@ jobs:
             echo "" >> ./release.txt
           done
 
-          echo "    nginx-aws-lc-freebsd-amd64: $(sha256sum ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
+          echo "    nginx-aws-lc-freebsd-amd64.tar.xz: $(sha256sum ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
       - name: Release
         uses: softprops/action-gh-release@v2
         with:

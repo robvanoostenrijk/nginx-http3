@@ -224,7 +224,7 @@ patch -p1 < /usr/src/aws-lc-nginx.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
-   --build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx-cookie-flag-module-${MODULE_NGINX_COOKIE_FLAG} set-misc-nginx-module-${MODULE_NGINX_HEADERS_MORE} njs-${MODULE_NGINX_NJS} ngx-http-substitutions-filter-module-latest" \
+   --build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx-cookie-flag-module-${MODULE_NGINX_COOKIE_FLAG} set-misc-nginx-module-${MODULE_NGINX_MISC} njs-${MODULE_NGINX_NJS} ngx-http-substitutions-filter-module-latest" \
    --prefix=/var/lib/nginx \
    --sbin-path=/usr/sbin/nginx \
    --modules-path=/usr/lib/nginx/modules \
@@ -286,7 +286,7 @@ make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
 
 ls -lh /usr/sbin/nginx
 file /usr/sbin/nginx
-/usr/sbin/nginx -vv
+/usr/sbin/nginx -v
 
 # Populate /scratchfs
 cp /etc/nginx/mime.types /scratchfs/etc/nginx/
