@@ -25,4 +25,5 @@ do
 done
 
 echo "[i] Grab version information"
+docker pull --platform linux/amd64 "${IMAGE}:${VERSION}"
 docker run --platform linux/amd64 --rm -i --log-driver=none -a stdin -a stdout -a stderr --entrypoint "/usr/sbin/nginx" "${IMAGE}:${VERSION}" -v 2> ./dist/version.txt
