@@ -103,11 +103,11 @@ jobs:
 
           for library in ${libraries[@]}; do
             echo " - nginx-${library}" >> ./release.txt
-            echo "    \\\`$(cat ./nginx-${library}/version.txt)\\\`" >> ./release.txt
+            echo "    \`$(cat ./nginx-${library}/version.txt)\`" >> ./release.txt
           done
 
           echo " - nginx-freebsd" >> ./release.txt
-          echo "    \\\`$(cat ./nginx-freebsd/version.txt)\\\`" >> ./release.txt
+          echo "    \`$(cat ./nginx-freebsd/version.txt)\`" >> ./release.txt
 
           echo "#### SHA256 Checksums:" >> ./release.txt
 
