@@ -80,6 +80,7 @@ jobs:
           name: nginx-freebsd
           path: |
             nginx-http3-aws-lc-freebsd-amd64.tar.xz
+            version.txt
           retention-days: 1
 
   release:
