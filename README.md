@@ -1,10 +1,10 @@
 # nginx-http3
 [![Build and publish container](https://github.com/robvanoostenrijk/nginx-http3/actions/workflows/main.yml/badge.svg)](https://github.com/robvanoostenrijk/nginx-http3/actions/workflows/main.yml)
 
-Static compiled [nginx-quic](https://hg.nginx.org/nginx-quic) (HTTP/3 support), with the option to compile against different SSL libraries supporting quick.
+Static compiled [nginx](https://nginx.org/) with HTTP/3 support, compiled against different SSL libraries supporting QUIC.
 
- - [BoringSSL](https://github.com/google/boringssl)
- - [Quictls](https://github.com/quictls/openssl) (OpenSSL+quic1)
+ - [AWS-LC ](https://github.com/aws/aws-lc/)
+ - [OpenSSL](https://github.com/openssl/openssl) (OpenSSL+quic1)
  - [LibreSSL](https://github.com/libressl-portable/portable)
 
 The compiled version enables the following optional nginx modules
@@ -15,5 +15,4 @@ The compiled version enables the following optional nginx modules
  - [nginx_fancyindex](https://github.com/aperezdc/ngx-fancyindex)
  - [nginx-module-vts](https://github.com/vozlt/nginx-module-vts)
  - [nginx_cookie_flag_module](https://github.com/AirisX/nginx_cookie_flag_module)
-
-Additionally a patch is applied to enable HTTP/2 HPACK feature developed by [Cloudflare](https://blog.cloudflare.com/hpack-the-silent-killer-feature-of-http-2/).
+ - [nginx_set_misc_module](https://github.com/openresty/set-misc-nginx-module)
