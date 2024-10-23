@@ -4,7 +4,7 @@
 Static compiled [nginx](https://nginx.org/) with HTTP/3 support, compiled against different SSL libraries supporting QUIC.
 
  - [AWS-LC ](https://github.com/aws/aws-lc/)
- - [OpenSSL](https://github.com/openssl/openssl) (OpenSSL+quic1)
+ - [OpenSSL](https://github.com/openssl/openssl)
  - [LibreSSL](https://github.com/libressl-portable/portable)
 
 The compiled version enables the following optional nginx modules
