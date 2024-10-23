@@ -1,4 +1,4 @@
-name: Build container(s) & Upload Artifacts
+name: Build release containers and create binary release
 
 on:
   push:
@@ -6,8 +6,9 @@ on:
       - '*'
 
 jobs:
-  build-container-and-deploy:
+  build-linux-containers:
     runs-on: ubuntu-latest
+    name: Build Linux Containers
     if: github.event_name == 'push'
     strategy:
       matrix:
@@ -29,6 +30,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Determine Image Version
+        shell: bash
         run: |
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
@@ -38,7 +40,7 @@ jobs:
           [ "$VERSION" == "main" ] && VERSION=latest
           echo "VERSION=${VERSION}-${{ matrix.library }}" >> $GITHUB_ENV
       - name: Build and push
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           build-args: SSL_LIBRARY=${{ matrix.library }}
           context: .
@@ -46,22 +48,27 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}:${{ matrix.library }},ghcr.io/${{ github.repository }}:${{ env.VERSION }}
       - name: Extract docker build artifacts
+        shell: bash
         run: |
           ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
-      - name: Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload artifacts 
+        uses: actions/upload-artifact@v4
         with:
-          files: |
+          name: nginx-${{ matrix.library }}
+          path: |
             dist/nginx-http3-${{ matrix.library }}-linux-amd64.tar.xz
             dist/nginx-http3-${{ matrix.library }}-linux-arm64.tar.xz
+            dist/version.txt
+          retention-days: 1
 
-  freebsd:
+  build-freebsd:
     runs-on: ubuntu-latest
     name: Build FreeBSD version
     steps:
       - name: Checkout from GitHub
         uses: actions/checkout@v4
-      - uses: vmactions/freebsd-vm@v1
+      - name: Build on FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
         with:
           release: "13.2"
           usesh: true
@@ -69,8 +76,66 @@ jobs:
             pkg install -y cmake git go gtar libxml2 libxslt pcre2 rust samurai
           run: |
             ./build-freebsd.sh
-      - name: Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          files: |
+          name: nginx-freebsd
+          path: |
             nginx-http3-aws-lc-freebsd-amd64.tar.xz
+            version.txt
+          retention-days: 1
+
+  release:
+    needs:
+      - build-freebsd
+      - build-linux-containers
+    runs-on: ubuntu-latest
+    name: Create Release
+    steps:
+      - name: Checkout from GitHub
+        uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: nginx-*
+      - name: Release Text
+        shell: bash
+        run: |
+          platforms=("linux-amd64" "linux-arm64")
+          libraries=("aws-lc" "libressl" "openssl")
+
+          git log -1 --no-merges --pretty=%B > ./release.txt
+
+          echo "#### Versions:" >> ./release.txt
+
+          for library in ${libraries[@]}; do
+            echo " - nginx-${library}" >> ./release.txt
+            echo "    \`$(cat ./nginx-${library}/version.txt)\`" >> ./release.txt
+          done
+
+          echo " - nginx-freebsd" >> ./release.txt
+          echo "    \`$(cat ./nginx-freebsd/version.txt)\`" >> ./release.txt
+
+          echo "#### SHA256 Checksums:" >> ./release.txt
+
+          for library in ${libraries[@]}; do
+            for platform in ${platforms[@]}; do
+              echo "    nginx-${library}-${platform}.tar.xz: $(sha256sum ./nginx-${library}/nginx-http3-${library}-${platform}.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
+            done
+
+            echo "" >> ./release.txt
+          done
+
+          echo "    nginx-aws-lc-freebsd-amd64.tar.xz: $(sha256sum ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: ./release.txt
+          files: |
+            ./nginx-aws-lc/nginx-http3-aws-lc-linux-amd64.tar.xz
+            ./nginx-aws-lc/nginx-http3-aws-lc-linux-arm64.tar.xz
+            ./nginx-libressl/nginx-http3-libressl-linux-amd64.tar.xz
+            ./nginx-libressl/nginx-http3-libressl-linux-arm64.tar.xz
+            ./nginx-openssl/nginx-http3-openssl-linux-amd64.tar.xz
+            ./nginx-openssl/nginx-http3-openssl-linux-arm64.tar.xz
+            ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz

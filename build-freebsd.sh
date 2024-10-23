@@ -182,7 +182,8 @@ make -j$(getconf _NPROCESSORS_ONLN) || exit 1
 
 ls -lh /usr/src/nginx/objs/nginx
 file /usr/src/nginx/objs/nginx
-/usr/src/nginx/objs/nginx -vv
+/usr/src/nginx/objs/nginx -v
 
+# Generate artifacts
+/usr/src/nginx/objs/nginx -v 2> ${BASE_DIR}/version.txt
 tar -C /usr/src/nginx/objs -Jcvf ${BASE_DIR}/nginx-http3-aws-lc-freebsd-amd64.tar.xz nginx
-

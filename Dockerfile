@@ -6,7 +6,7 @@ FROM alpine:latest AS builder
 
 ARG SSL_LIBRARY=openssl
 
-ENV OPENSSL_TAG=openssl-3.3.2 \
+ENV OPENSSL_TAG=openssl-3.4.0 \
     LIBRESSL_TAG=v3.9.2 \
     AWS_LC_TAG=v1.37.0 \
     MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
@@ -14,7 +14,7 @@ ENV OPENSSL_TAG=openssl-3.3.2 \
     MODULE_NGINX_ECHO=v0.63 \
     MODULE_NGINX_HEADERS_MORE=v0.37 \
     MODULE_NGINX_MISC=v0.33 \
-    MODULE_NGINX_NJS=0.8.6 \
+    MODULE_NGINX_NJS=0.8.7 \
     MODULE_NGINX_VTS=v0.2.2 \
     NGINX=1.27.2
 
@@ -140,7 +140,6 @@ curl --silent --location https://github.com/nginx/njs/archive/refs/tags/${MODULE
 #
 # nginx
 #
-#curl --silent --location https://hg.nginx.org/nginx-quic/archive/${NGINX_QUIC_COMMIT}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-quic --strip-components=1 || exit 1
 curl --silent --location https://nginx.org/download/nginx-${NGINX}.tar.gz | tar xz -C /usr/src --one-top-level=nginx --strip-components=1 || exit 1
 curl --silent --location -o /usr/src/aws-lc-nginx.patch https://raw.githubusercontent.com/aws/aws-lc/main/tests/ci/integration/nginx_patch/aws-lc-nginx.patch || exit 1
 
@@ -224,7 +223,7 @@ patch -p1 < /usr/src/aws-lc-nginx.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
-   --build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx-cookie-flag-module-${MODULE_NGINX_COOKIE_FLAG} set-misc-nginx-module-${MODULE_NGINX_HEADERS_MORE} njs-${MODULE_NGINX_NJS} ngx-http-substitutions-filter-module-latest" \
+   --build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx-cookie-flag-module-${MODULE_NGINX_COOKIE_FLAG} set-misc-nginx-module-${MODULE_NGINX_MISC} njs-${MODULE_NGINX_NJS} ngx-http-substitutions-filter-module-latest" \
    --prefix=/var/lib/nginx \
    --sbin-path=/usr/sbin/nginx \
    --modules-path=/usr/lib/nginx/modules \
@@ -286,7 +285,7 @@ make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
 
 ls -lh /usr/sbin/nginx
 file /usr/sbin/nginx
-/usr/sbin/nginx -vv
+/usr/sbin/nginx -v
 
 # Populate /scratchfs
 cp /etc/nginx/mime.types /scratchfs/etc/nginx/
