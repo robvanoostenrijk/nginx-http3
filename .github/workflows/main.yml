@@ -139,3 +139,9 @@ jobs:
             ./nginx-openssl/nginx-http3-openssl-linux-amd64.tar.xz
             ./nginx-openssl/nginx-http3-openssl-linux-arm64.tar.xz
             ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz
+      - name: Remove old packages
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'nginx-http3'
+          package-type: 'container'
+          min-versions-to-keep: 10
