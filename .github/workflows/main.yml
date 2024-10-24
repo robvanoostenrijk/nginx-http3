@@ -50,7 +50,7 @@ jobs:
       - name: Extract docker build artifacts
         shell: bash
         run: |
-          ./extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
+          ./scripts/extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
       - name: Upload artifacts 
         uses: actions/upload-artifact@v4
         with:
@@ -73,7 +73,7 @@ jobs:
           release: "13.2"
           usesh: true
           prepare: |
-            pkg install -y cmake git go gtar libxml2 libxslt pcre2 rust samurai
+            pkg install -y bash cmake git go gtar libxml2 libxslt pcre2 rust samurai
           run: |
             ./build-freebsd.sh
       - name: Upload artifacts

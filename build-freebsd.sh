@@ -1,17 +1,9 @@
-#!/bin/sh
+#!/usr/local/bin/bash
 
 BASE_DIR="$(cd "$(dirname "$0")"; pwd)";
 echo "[i] BASE_DIR => $BASE_DIR"
 
-AWS_LC_TAG=v1.37.0
-MODULE_NGINX_COOKIE_FLAG=v1.1.0
-MODULE_NGINX_DEVEL_KIT=v0.3.3
-MODULE_NGINX_ECHO=v0.63
-MODULE_NGINX_HEADERS_MORE=v0.37
-MODULE_NGINX_MISC=v0.33
-MODULE_NGINX_NJS=0.8.6
-MODULE_NGINX_VTS=v0.2.2
-NGINX=1.27.1
+source ${BASE_DIR}/versions.env
 
 find /usr/src -maxdepth 1 -mindepth 1 -type d -exec rm -rf {} \;
 
@@ -86,11 +78,11 @@ curl --silent --location -o /usr/src/aws-lc-nginx.patch https://raw.githubuserco
 mkdir -p /usr/src/aws-lc/build
 cd /usr/src/aws-lc/build
 CC=clang CXX=clang++ cmake \
-  -GNinja \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_LIBDIR=lib \
-  -DCMAKE_INSTALL_PREFIX=../install \
-  ..
+	-GNinja \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_LIBDIR=lib \
+	-DCMAKE_INSTALL_PREFIX=../install \
+	..
 cmake --build .
 cmake --install .
 mkdir -p /usr/src/aws-lc/install/.openssl/lib /usr/src/aws-lc/install/.openssl/include
@@ -105,16 +97,16 @@ echo "[i] Compiling: nginx_brotli"
 cd /usr/src/ngx_brotli/deps/brotli
 mkdir out && cd out
 cmake \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_SHARED_LIBS=OFF \
-    -DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections" \
-    -DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections" \
-    -DCMAKE_INSTALL_PREFIX=./installed \
-    ..
+	-DCMAKE_BUILD_TYPE=Release \
+	-DBUILD_SHARED_LIBS=OFF \
+	-DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections" \
+	-DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections" \
+	-DCMAKE_INSTALL_PREFIX=./installed \
+	..
 cmake \
-     --build . \
-     --config Release \
-     --target brotlienc
+	--build . \
+	--config Release \
+	--target brotlienc
 
 #
 # nginx
@@ -125,59 +117,59 @@ patch -p1 < /usr/src/aws-lc-nginx.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
-   --build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx-cookie-flag-module-${MODULE_NGINX_COOKIE_FLAG} set-misc-nginx-module-${MODULE_NGINX_HEADERS_MORE} njs-${MODULE_NGINX_NJS} ngx-http-substitutions-filter-module-latest" \
-   --prefix=/usr/local/etc/nginx \
-   --sbin-path=/usr/local/sbin/nginx \
-   --modules-path=/usr/lib/nginx/modules \
-   --conf-path=/usr/local/etc/nginx/nginx.conf \
-   --pid-path=/var/run/nginx.pid \
-   --http-log-path=/var/log/nginx/access.log \
-   --error-log-path=/var/log/nginx/error.log \
-   --lock-path=/run/nginx/nginx.lock \
-   --http-client-body-temp-path=/var/tmp/nginx/client_body_temp \
-   --http-proxy-temp-path=/var/tmp/nginx/proxy_temp \
-   --http-fastcgi-temp-path=/var/tmp/nginx/fastcgi_temp \
-   --http-uwsgi-temp-path=/var/tmp/nginx/uwsgi_temp \
-   --http-scgi-temp-path=/var/tmp/nginx/scgi_temp \
-   --user=www \
-   --group=www \
-   --with-cc-opt="-I /usr/src/libxml2 -I /usr/src/aws-lc/install/include -I /usr/local/include" \
-   --with-ld-opt="-L /usr/src/aws-lc/install/lib -L /usr/src/libxml2 -L /usr/local/lib" \
-   --with-http_addition_module \
-   --with-http_auth_request_module \
-   --with-http_dav_module \
-   --with-http_degradation_module \
-   --with-http_gunzip_module \
-   --with-http_gzip_static_module \
-   --with-http_random_index_module \
-   --with-http_realip_module \
-   --with-http_secure_link_module \
-   --with-http_slice_module \
-   --with-http_ssl_module \
-   --with-http_slice_module \
-   --with-http_stub_status_module \
-   --with-http_sub_module \
-   --with-http_v2_module \
-   --with-http_v3_module \
-   --with-http_xslt_module \
-   --with-poll_module \
-   --with-select_module \
-   --with-zlib-asm=CPU \
-   --with-zlib-opt="-O3" \
-   --add-module=/usr/src/ngx_devel_kit \
-   --add-module=/usr/src/echo-nginx-module \
-   --add-module=/usr/src/headers-more-nginx-module \
-   --add-module=/usr/src/nginx_cookie_flag_module \
-   --add-module=/usr/src/nginx-module-vts \
-   --add-module=/usr/src/ngx_brotli \
-   --add-module=/usr/src/ngx_http_substitutions_filter_module \
-   --add-module=/usr/src/njs/nginx \
-   --add-module=/usr/src/set-misc-nginx-module \
-   --without-http_browser_module \
-   --without-http_grpc_module \
-   --without-http_mirror_module \
-   --without-http_scgi_module \
-   --without-http_uwsgi_module || cat objs/autoconf.err
+	--build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx-cookie-flag-module-${MODULE_NGINX_COOKIE_FLAG} set-misc-nginx-module-${MODULE_NGINX_HEADERS_MORE} njs-${MODULE_NGINX_NJS} ngx-http-substitutions-filter-module-latest" \
+	--prefix=/usr/local/etc/nginx \
+	--sbin-path=/usr/local/sbin/nginx \
+	--modules-path=/usr/lib/nginx/modules \
+	--conf-path=/usr/local/etc/nginx/nginx.conf \
+	--pid-path=/var/run/nginx.pid \
+	--http-log-path=/var/log/nginx/access.log \
+	--error-log-path=/var/log/nginx/error.log \
+	--lock-path=/run/nginx/nginx.lock \
+	--http-client-body-temp-path=/var/tmp/nginx/client_body_temp \
+	--http-proxy-temp-path=/var/tmp/nginx/proxy_temp \
+	--http-fastcgi-temp-path=/var/tmp/nginx/fastcgi_temp \
+	--http-uwsgi-temp-path=/var/tmp/nginx/uwsgi_temp \
+	--http-scgi-temp-path=/var/tmp/nginx/scgi_temp \
+	--user=www \
+	--group=www \
+	--with-cc-opt="-I /usr/src/libxml2 -I /usr/src/aws-lc/install/include -I /usr/local/include" \
+	--with-ld-opt="-L /usr/src/aws-lc/install/lib -L /usr/src/libxml2 -L /usr/local/lib" \
+	--with-http_addition_module \
+	--with-http_auth_request_module \
+	--with-http_dav_module \
+	--with-http_degradation_module \
+	--with-http_gunzip_module \
+	--with-http_gzip_static_module \
+	--with-http_random_index_module \
+	--with-http_realip_module \
+	--with-http_secure_link_module \
+	--with-http_slice_module \
+	--with-http_ssl_module \
+	--with-http_slice_module \
+	--with-http_stub_status_module \
+	--with-http_sub_module \
+	--with-http_v2_module \
+	--with-http_v3_module \
+	--with-http_xslt_module \
+	--with-poll_module \
+	--with-select_module \
+	--with-zlib-asm=CPU \
+	--with-zlib-opt="-O3" \
+	--add-module=/usr/src/ngx_devel_kit \
+	--add-module=/usr/src/echo-nginx-module \
+	--add-module=/usr/src/headers-more-nginx-module \
+	--add-module=/usr/src/nginx_cookie_flag_module \
+	--add-module=/usr/src/nginx-module-vts \
+	--add-module=/usr/src/ngx_brotli \
+	--add-module=/usr/src/ngx_http_substitutions_filter_module \
+	--add-module=/usr/src/njs/nginx \
+	--add-module=/usr/src/set-misc-nginx-module \
+	--without-http_browser_module \
+	--without-http_grpc_module \
+	--without-http_mirror_module \
+	--without-http_scgi_module \
+	--without-http_uwsgi_module || cat objs/autoconf.err
 make -j$(getconf _NPROCESSORS_ONLN) || exit 1
 
 ls -lh /usr/src/nginx/objs/nginx

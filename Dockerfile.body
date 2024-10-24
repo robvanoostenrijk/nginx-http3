@@ -1,21 +1,3 @@
-# syntax=docker/dockerfile:1
-##################################################
-# Nginx with Quiche (HTTP/3), Brotli, Headers More
-##################################################
-FROM alpine:latest AS builder
-
-ARG AWS_LC_TAG=v1.37.0 \
-LIBRESSL_TAG=v3.9.2 \
-OPENSSL_TAG=openssl-3.4.0 \
-MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
-MODULE_NGINX_DEVEL_KIT=v0.3.3 \
-MODULE_NGINX_ECHO=v0.63 \
-MODULE_NGINX_HEADERS_MORE=v0.37 \
-MODULE_NGINX_MISC=v0.33 \
-MODULE_NGINX_NJS=0.8.7 \
-MODULE_NGINX_VTS=v0.2.2 \
-NGINX=1.27.2
-
 ARG SSL_LIBRARY=openssl
 
 COPY --link ["patches/nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
