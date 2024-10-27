@@ -4,7 +4,7 @@ source versions.env
 
 cat Dockerfile.head > Dockerfile
 
-cat <<- EOF >> Dockerfile
+cat << EOF >> Dockerfile
 
 ARG AWS_LC_TAG=${AWS_LC_TAG} \\
 	LIBRESSL_TAG=${LIBRESSL_TAG} \\
