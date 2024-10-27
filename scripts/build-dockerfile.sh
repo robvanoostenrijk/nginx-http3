@@ -6,7 +6,7 @@ cat Dockerfile.head > Dockerfile
 
 cat << EOF >> Dockerfile
 
-ARG AWS_LC_TAG=${AWS_LC_TAG} \\
+ARG	AWS_LC_TAG=${AWS_LC_TAG} \\
 	LIBRESSL_TAG=${LIBRESSL_TAG} \\
 	OPENSSL_TAG=${OPENSSL_TAG} \\
 	MODULE_NGINX_COOKIE_FLAG=${MODULE_NGINX_COOKIE_FLAG} \\
