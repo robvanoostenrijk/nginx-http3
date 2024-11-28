@@ -20,6 +20,7 @@ ARG SSL_LIBRARY=openssl
 
 COPY --link ["patches/nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
 COPY --link ["patches/use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
+COPY --link ["patches/aws-lc-nginx.patch", "/usr/src/aws-lc-nginx.patch"]
 COPY --link ["scratchfs", "/scratchfs"]
 
 RUN <<EOF
@@ -140,7 +141,7 @@ curl --silent --location https://github.com/nginx/njs/archive/refs/tags/${MODULE
 # nginx
 #
 curl --silent --location https://nginx.org/download/nginx-${NGINX}.tar.gz | tar xz -C /usr/src --one-top-level=nginx --strip-components=1 || exit 1
-curl --silent --location -o /usr/src/aws-lc-nginx.patch https://raw.githubusercontent.com/aws/aws-lc/main/tests/ci/integration/nginx_patch/aws-lc-nginx.patch || exit 1
+#curl --silent --location -o /usr/src/aws-lc-nginx.patch https://raw.githubusercontent.com/aws/aws-lc/main/tests/ci/integration/nginx_patch/aws-lc-nginx.patch || exit 1
 
 #
 # brotli cargo compile settings
