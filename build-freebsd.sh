@@ -70,7 +70,7 @@ curl --silent --location https://github.com/nginx/njs/archive/refs/tags/${MODULE
 #
 echo "[i] Downloading: nginx"
 curl --silent --location https://nginx.org/download/nginx-${NGINX}.tar.gz | gtar xz -C /usr/src --one-top-level=nginx --strip-components=1 || exit 1
-curl --silent --location -o /usr/src/aws-lc-nginx.patch https://raw.githubusercontent.com/aws/aws-lc/main/tests/ci/integration/nginx_patch/aws-lc-nginx.patch || exit 1
+#curl --silent --location -o /usr/src/aws-lc-nginx.patch https://raw.githubusercontent.com/aws/aws-lc/main/tests/ci/integration/nginx_patch/aws-lc-nginx.patch || exit 1
 
 #
 # AWS-LC
@@ -113,7 +113,7 @@ cmake \
 #
 echo "[i] Compiling: nginx"
 cd /usr/src/nginx
-patch -p1 < /usr/src/aws-lc-nginx.patch || exit 1
+patch -p1 < ${BASE_DIR}/patches/aws-lc-nginx.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
