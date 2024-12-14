@@ -14,6 +14,7 @@ ARG	AWS_LC_TAG=v1.41.1 \
 	MODULE_NGINX_MISC=v0.33 \
 	MODULE_NGINX_NJS=0.8.8 \
 	MODULE_NGINX_VTS=v0.2.2 \
+	MODULE_NGINX_ZSTD=0.1.1 \
 	NGINX=1.27.3
 
 ARG SSL_LIBRARY=openssl
@@ -52,7 +53,9 @@ apk add --no-cache --virtual .build-deps \
 	pcre2-dev \
 	samurai \
 	xz-static \
-	zlib-static
+	zlib-static \
+	zstd-dev \
+	zstd-static
 
 #
 # Prepare destination scratchfs
@@ -130,6 +133,11 @@ curl --silent --location https://github.com/vozlt/nginx-module-vts/archive/refs/
 # Module: ngx_http_substitutions_filter_module
 #
 curl --silent --location https://github.com/yaoweibin/ngx_http_substitutions_filter_module/tarball/master | tar xz -C /usr/src --one-top-level=ngx_http_substitutions_filter_module --strip-components=1 || exit 1
+
+#
+# Module: zstd-nginx-module
+#
+curl --silent --location https://github.com/tokers/zstd-nginx-module/archive/refs/tags/${MODULE_NGINX_ZSTD}.tar.gz | tar xz -C /usr/src --one-top-level=zstd-nginx-module --strip-components=1 || exit 1
 
 #
 # Module: njs
@@ -222,7 +230,7 @@ patch -p1 < /usr/src/aws-lc-nginx.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
-	--build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx-cookie-flag-module-${MODULE_NGINX_COOKIE_FLAG} set-misc-nginx-module-${MODULE_NGINX_MISC} njs-${MODULE_NGINX_NJS} ngx-http-substitutions-filter-module-latest" \
+	--build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx-cookie-flag-module-${MODULE_NGINX_COOKIE_FLAG} set-misc-nginx-module-${MODULE_NGINX_MISC} ngx-http-substitutions-filter-module-latest zstd-nginx-module-${MODULE_NGINX_ZSTD} njs-${MODULE_NGINX_NJS}" \
 	--prefix=/var/lib/nginx \
 	--sbin-path=/usr/sbin/nginx \
 	--modules-path=/usr/lib/nginx/modules \
@@ -272,6 +280,7 @@ CXX=/usr/bin/clang++ \
 	--add-module=/usr/src/nginx-module-vts \
 	--add-module=/usr/src/ngx_brotli \
 	--add-module=/usr/src/ngx_http_substitutions_filter_module \
+	--add-module=/usr/src/zstd-nginx-module \
 	--add-module=/usr/src/njs/nginx \
 	--add-module=/usr/src/set-misc-nginx-module \
 	--without-http_browser_module \

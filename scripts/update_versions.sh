@@ -19,5 +19,6 @@ cat <<- EOF > versions.env
 	MODULE_NGINX_MISC=v$(get_latest_tag openresty/set-misc-nginx-module v)
 	MODULE_NGINX_NJS=$(get_latest_tag nginx/njs)
 	MODULE_NGINX_VTS=v$(get_latest_tag vozlt/nginx-module-vts v)
+	MODULE_NGINX_ZSTD=$(get_latest_tag tokers/zstd-nginx-module)
 	NGINX=$(get_latest_tag nginx/nginx release)
 EOF
