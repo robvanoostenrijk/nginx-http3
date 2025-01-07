@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Generate Dockerfile
 source versions.env
 
