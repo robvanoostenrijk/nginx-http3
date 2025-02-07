@@ -21,6 +21,7 @@ ARG SSL_LIBRARY=openssl
 
 COPY --link ["patches/nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
 COPY --link ["patches/use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
+COPY --link ["patches/aws-lc-nginx.patch", "/usr/src/aws-lc-nginx.patch"]
 COPY --link ["scratchfs", "/scratchfs"]
 
 RUN <<EOF
@@ -148,7 +149,7 @@ curl --silent --location https://github.com/nginx/njs/archive/refs/tags/${MODULE
 # nginx
 #
 curl --silent --location https://nginx.org/download/nginx-${NGINX}.tar.gz | tar xz -C /usr/src --one-top-level=nginx --strip-components=1 || exit 1
-curl --silent --location -o /usr/src/aws-lc-nginx.patch https://raw.githubusercontent.com/aws/aws-lc/main/tests/ci/integration/nginx_patch/aws-lc-nginx.patch || exit 1
+#curl --silent --location -o /usr/src/aws-lc-nginx.patch https://raw.githubusercontent.com/aws/aws-lc/main/tests/ci/integration/nginx_patch/aws-lc-nginx.patch || exit 1
 
 #
 # brotli cargo compile settings
@@ -288,27 +289,27 @@ CXX=/usr/bin/clang++ \
 	--without-http_mirror_module \
 	--without-http_scgi_module \
 	--without-http_uwsgi_module || cat objs/autoconf.err
-make -j$(getconf _NPROCESSORS_ONLN) || exit 1
-make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
+#make -j$(getconf _NPROCESSORS_ONLN) || exit 1
+#make -j$(getconf _NPROCESSORS_ONLN) install || exit 1
 
-ls -lh /usr/sbin/nginx
-file /usr/sbin/nginx
-/usr/sbin/nginx -v
+#ls -lh /usr/sbin/nginx
+#file /usr/sbin/nginx
+#/usr/sbin/nginx -v
 
 # Populate /scratchfs
-cp /etc/nginx/mime.types /scratchfs/etc/nginx/
-cp /usr/src/nginx/html/* /scratchfs/var/lib/nginx/html/
-cp /usr/sbin/nginx /scratchfs/usr/sbin
+#cp /etc/nginx/mime.types /scratchfs/etc/nginx/
+#cp /usr/src/nginx/html/* /scratchfs/var/lib/nginx/html/
+#cp /usr/sbin/nginx /scratchfs/usr/sbin
 
 EOF
 
-FROM scratch
+#FROM scratch
 
-COPY --from=builder /scratchfs /
+#COPY --from=builder /scratchfs /
 
-EXPOSE 8080/tcp 8443/tcp 8443/udp
-STOPSIGNAL SIGQUIT
+#EXPOSE 8080/tcp 8443/tcp 8443/udp
+#STOPSIGNAL SIGQUIT
 
-USER nginx
-ENTRYPOINT ["/usr/sbin/nginx"]
-CMD ["-g", "daemon off;"]
+#USER nginx
+#ENTRYPOINT ["/usr/sbin/nginx"]
+#CMD ["-g", "daemon off;"]
