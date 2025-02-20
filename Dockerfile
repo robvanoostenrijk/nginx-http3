@@ -4,11 +4,11 @@
 ##################################################
 FROM alpine:latest AS builder
 
-ARG	AWS_LC_TAG=v1.46.0 \
+ARG	AWS_LC_TAG=v1.46.1 \
 	LIBRESSL_TAG=v3.9.2 \
 	OPENSSL_TAG=openssl-3.4.1 \
 	MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
-	MODULE_NGINX_DEVEL_KIT=v0.3.3 \
+	MODULE_NGINX_DEVEL_KIT=v0.3.4 \
 	MODULE_NGINX_ECHO=v0.63 \
 	MODULE_NGINX_HEADERS_MORE=v0.38 \
 	MODULE_NGINX_MISC=v0.33 \
