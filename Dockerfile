@@ -51,6 +51,7 @@ apk add --no-cache --virtual .build-deps \
 	patch \
 	perl \
 	pcre2-dev \
+	pcre2-static \
 	samurai \
 	xz-static \
 	zlib-static \
