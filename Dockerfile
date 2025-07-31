@@ -4,7 +4,7 @@
 ##################################################
 FROM alpine:latest AS builder
 
-ARG	AWS_LC_TAG=v1.55.0 \
+ARG	AWS_LC_TAG=v1.56.0 \
 	LIBRESSL_TAG=v4.1.0 \
 	OPENSSL_TAG=openssl-3.5.1 \
 	MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
@@ -12,7 +12,7 @@ ARG	AWS_LC_TAG=v1.55.0 \
 	MODULE_NGINX_ECHO=v0.63 \
 	MODULE_NGINX_HEADERS_MORE=v0.39 \
 	MODULE_NGINX_MISC=v0.33 \
-	MODULE_NGINX_NJS=0.9.0 \
+	MODULE_NGINX_NJS=0.9.1 \
 	MODULE_NGINX_VTS=v0.2.4 \
 	MODULE_NGINX_ZSTD=0.1.1 \
 	NGINX=1.29.0
@@ -210,7 +210,7 @@ cd /usr/src/zlib
 #
 cd /usr/src/ngx_brotli/deps/brotli
 mkdir out && cd out
-cmake \
+CC=clang cmake \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_SHARED_LIBS=OFF \
 	-DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects -Wl,--gc-sections" \

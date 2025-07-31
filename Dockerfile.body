@@ -191,7 +191,7 @@ cd /usr/src/zlib
 #
 cd /usr/src/ngx_brotli/deps/brotli
 mkdir out && cd out
-cmake \
+CC=clang cmake \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_SHARED_LIBS=OFF \
 	-DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects -Wl,--gc-sections" \
