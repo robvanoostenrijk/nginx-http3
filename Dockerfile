@@ -19,8 +19,8 @@ ARG	AWS_LC_TAG=v1.56.0 \
 
 ARG SSL_LIBRARY=openssl
 
-ARG UID=101
-ARG GID=101
+ARG UID=1000
+ARG GID=1000
 
 COPY --link ["patches/nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
 COPY --link ["patches/use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
@@ -345,6 +345,6 @@ COPY --from=builder /scratchfs /
 EXPOSE 8080/tcp 8443/tcp 8443/udp
 STOPSIGNAL SIGQUIT
 
-USER nginx
+USER ${UID}
 ENTRYPOINT ["/usr/sbin/nginx"]
 CMD ["-e", "/var/log/nginx/error.log", "-g", "daemon off;"]
