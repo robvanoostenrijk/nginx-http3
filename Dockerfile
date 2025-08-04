@@ -19,6 +19,9 @@ ARG	AWS_LC_TAG=v1.56.0 \
 
 ARG SSL_LIBRARY=openssl
 
+ARG UID=101
+ARG GID=101
+
 COPY --link ["patches/nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
 COPY --link ["patches/use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
 COPY --link ["patches/aws-lc-nginx.patch", "/usr/src/aws-lc-nginx.patch"]
@@ -64,7 +67,7 @@ apk add --no-cache --virtual .build-deps \
 #
 # Create self-signed certificate
 openssl req -x509 -newkey rsa:4096 -nodes -keyout /scratchfs/etc/ssl/private/localhost.key -out /scratchfs/etc/ssl/localhost.pem -days 365 -sha256 -subj "/CN=localhost"
-chown 1000:1000 /scratchfs/etc/ssl/private/localhost.key /scratchfs/var/run/nginx /scratchfs/var/lib/nginx/logs /scratchfs/var/lib/nginx/tmp
+chown ${UID}:${GID} /scratchfs/etc/ssl/private/localhost.key
 
 #
 # Mozilla CA cert bundle
@@ -213,8 +216,8 @@ mkdir out && cd out
 CC=clang cmake \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_SHARED_LIBS=OFF \
-	-DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects -Wl,--gc-sections" \
-	-DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects -Wl,--gc-sections" \
+	-DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects" \
+	-DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects" \
 	-DCMAKE_INSTALL_PREFIX=./installed \
 	..
 cmake \
@@ -297,10 +300,41 @@ ls -lh /usr/sbin/nginx
 file /usr/sbin/nginx
 /usr/sbin/nginx -v
 
+EOF
+
+RUN <<EOF
+set -x
+
 # Populate /scratchfs
+mkdir -p \
+    /scratchfs/etc/nginx \
+    /scratchfs/tmp \
+    /scratchfs/var/cache/nginx \
+    /scratchfs/var/lib/nginx/html \
+    /scratchfs/var/log/nginx \
+    /scratchfs/usr/sbin
+
+chmod 1777 /scratchfs/tmp
+
+chown -R $UID:0 \
+    /scratchfs/etc/nginx \
+    /scratchfs/var/cache/nginx \
+    /scratchfs/var/log/nginx
+
+chmod -R g+w \
+    /scratchfs/etc/nginx \
+    /scratchfs/var/cache/nginx \
+    /scratchfs/var/log/nginx
+
 cp /etc/nginx/mime.types /scratchfs/etc/nginx/
 cp /usr/src/nginx/html/* /scratchfs/var/lib/nginx/html/
 cp /usr/sbin/nginx /scratchfs/usr/sbin
+
+echo "root:x:0:" > /scratchfs/etc/group
+echo "nginx:x:${GID}:" >> /scratchfs/etc/group
+
+echo "root:x:0:0:root:/root:/dev/null" > /scratchfs/etc/passwd
+echo "nginx:x:${UID}:${GID}:nginx:/etc/nginx:/dev/null" >> /scratchfs/etc/passwd
 
 EOF
 
@@ -313,4 +347,4 @@ STOPSIGNAL SIGQUIT
 
 USER nginx
 ENTRYPOINT ["/usr/sbin/nginx"]
-CMD ["-g", "daemon off;"]
+CMD ["-e", "/var/log/nginx/error.log", "-g", "daemon off;"]
