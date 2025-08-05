@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 ##################################################
-# Nginx with Quiche (HTTP/3), Brotli, Headers More
+# Nginx with HTTP/3, Brotli, Headers More
 ##################################################
 FROM alpine:latest AS builder
 
