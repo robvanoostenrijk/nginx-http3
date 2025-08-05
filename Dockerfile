@@ -66,7 +66,8 @@ apk add --no-cache --virtual .build-deps \
 # Prepare destination scratchfs
 #
 # Create self-signed certificate
-openssl req -x509 -newkey rsa:4096 -nodes -keyout /scratchfs/etc/ssl/private/localhost.key -out /scratchfs/etc/ssl/localhost.pem -days 365 -sha256 -subj "/CN=localhost"
+mkdir -p /scratchfs/etc/ssl/private
+openssl req -x509 -newkey rsa:4096 -nodes -keyout /scratchfs/etc/ssl/private/localhost.key -out /scratchfs/etc/ssl/private/localhost.pem -days 365 -sha256 -subj "/CN=localhost"
 chown ${UID}:${GID} /scratchfs/etc/ssl/private/localhost.key
 
 #
