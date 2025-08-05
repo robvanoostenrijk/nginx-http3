@@ -307,24 +307,25 @@ set -x
 
 # Populate /scratchfs
 mkdir -p \
-    /scratchfs/etc/nginx \
-    /scratchfs/tmp \
-    /scratchfs/var/cache/nginx \
-    /scratchfs/var/lib/nginx/html \
-    /scratchfs/var/log/nginx \
-    /scratchfs/usr/sbin
+	/scratchfs/etc/nginx \
+	/scratchfs/run \
+	/scratchfs/tmp \
+	/scratchfs/var/cache/nginx \
+	/scratchfs/var/lib/nginx/html \
+	/scratchfs/var/log/nginx \
+	/scratchfs/usr/sbin
 
-chmod 1777 /scratchfs/tmp
+chmod 1777 /scratchfs/run /scratchfs/tmp
 
-chown -R $UID:0 \
-    /scratchfs/etc/nginx \
-    /scratchfs/var/cache/nginx \
-    /scratchfs/var/log/nginx
+chown -R ${UID}:0 \
+	/scratchfs/etc/nginx \
+	/scratchfs/var/cache/nginx \
+	/scratchfs/var/log/nginx
 
 chmod -R g+w \
-    /scratchfs/etc/nginx \
-    /scratchfs/var/cache/nginx \
-    /scratchfs/var/log/nginx
+	/scratchfs/etc/nginx \
+	/scratchfs/var/cache/nginx \
+	/scratchfs/var/log/nginx
 
 cp /etc/nginx/mime.types /scratchfs/etc/nginx/
 cp /usr/src/nginx/html/* /scratchfs/var/lib/nginx/html/
@@ -345,6 +346,6 @@ COPY --from=builder /scratchfs /
 EXPOSE 8080/tcp 8443/tcp 8443/udp
 STOPSIGNAL SIGQUIT
 
-USER ${UID}
+USER 1000
 ENTRYPOINT ["/usr/sbin/nginx"]
 CMD ["-e", "/var/log/nginx/error.log", "-g", "daemon off;"]
