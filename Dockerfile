@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1
 ##################################################
-# Nginx with Quiche (HTTP/3), Brotli, Headers More
+# Nginx with HTTP/3, Brotli, Headers More
 ##################################################
 FROM alpine:latest AS builder
 
-ARG	AWS_LC_TAG=v1.56.0 \
+ARG	AWS_LC_TAG=v1.57.1 \
 	LIBRESSL_TAG=v4.1.0 \
-	OPENSSL_TAG=openssl-3.5.1 \
+	OPENSSL_TAG=openssl-3.5.2 \
 	MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
 	MODULE_NGINX_DEVEL_KIT=v0.3.4 \
 	MODULE_NGINX_ECHO=v0.63 \
@@ -18,6 +18,9 @@ ARG	AWS_LC_TAG=v1.56.0 \
 	NGINX=1.29.0
 
 ARG SSL_LIBRARY=openssl
+
+ARG UID=1000
+ARG GID=1000
 
 COPY --link ["patches/nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
 COPY --link ["patches/use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
@@ -63,8 +66,9 @@ apk add --no-cache --virtual .build-deps \
 # Prepare destination scratchfs
 #
 # Create self-signed certificate
-openssl req -x509 -newkey rsa:4096 -nodes -keyout /scratchfs/etc/ssl/private/localhost.key -out /scratchfs/etc/ssl/localhost.pem -days 365 -sha256 -subj "/CN=localhost"
-chown 1000:1000 /scratchfs/etc/ssl/private/localhost.key /scratchfs/var/run/nginx /scratchfs/var/lib/nginx/logs /scratchfs/var/lib/nginx/tmp
+mkdir -p /scratchfs/etc/ssl/private
+openssl req -x509 -newkey rsa:4096 -nodes -keyout /scratchfs/etc/ssl/private/localhost.key -out /scratchfs/etc/ssl/private/localhost.pem -days 365 -sha256 -subj "/CN=localhost"
+chown ${UID}:${GID} /scratchfs/etc/ssl/private/localhost.key
 
 #
 # Mozilla CA cert bundle
@@ -213,8 +217,8 @@ mkdir out && cd out
 CC=clang cmake \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_SHARED_LIBS=OFF \
-	-DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects -Wl,--gc-sections" \
-	-DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects -Wl,--gc-sections" \
+	-DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects" \
+	-DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects" \
 	-DCMAKE_INSTALL_PREFIX=./installed \
 	..
 cmake \
@@ -297,10 +301,42 @@ ls -lh /usr/sbin/nginx
 file /usr/sbin/nginx
 /usr/sbin/nginx -v
 
+EOF
+
+RUN <<EOF
+set -x
+
 # Populate /scratchfs
+mkdir -p \
+	/scratchfs/etc/nginx \
+	/scratchfs/run \
+	/scratchfs/tmp \
+	/scratchfs/var/cache/nginx \
+	/scratchfs/var/lib/nginx/html \
+	/scratchfs/var/log/nginx \
+	/scratchfs/usr/sbin
+
+chmod 1777 /scratchfs/run /scratchfs/tmp
+
+chown -R ${UID}:0 \
+	/scratchfs/etc/nginx \
+	/scratchfs/var/cache/nginx \
+	/scratchfs/var/log/nginx
+
+chmod -R g+w \
+	/scratchfs/etc/nginx \
+	/scratchfs/var/cache/nginx \
+	/scratchfs/var/log/nginx
+
 cp /etc/nginx/mime.types /scratchfs/etc/nginx/
 cp /usr/src/nginx/html/* /scratchfs/var/lib/nginx/html/
 cp /usr/sbin/nginx /scratchfs/usr/sbin
+
+echo "root:x:0:" > /scratchfs/etc/group
+echo "nginx:x:${GID}:" >> /scratchfs/etc/group
+
+echo "root:x:0:0:root:/root:/dev/null" > /scratchfs/etc/passwd
+echo "nginx:x:${UID}:${GID}:nginx:/etc/nginx:/dev/null" >> /scratchfs/etc/passwd
 
 EOF
 
@@ -311,6 +347,6 @@ COPY --from=builder /scratchfs /
 EXPOSE 8080/tcp 8443/tcp 8443/udp
 STOPSIGNAL SIGQUIT
 
-USER nginx
+USER 1000
 ENTRYPOINT ["/usr/sbin/nginx"]
-CMD ["-g", "daemon off;"]
+CMD ["-e", "/var/log/nginx/error.log", "-g", "daemon off;"]
