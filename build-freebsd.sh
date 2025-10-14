@@ -119,7 +119,6 @@ cmake \
 #
 echo "[i] Compiling: nginx"
 cd /usr/src/nginx
-patch -p1 < ${BASE_DIR}/patches/aws-lc-nginx.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
