@@ -231,7 +231,6 @@ cmake \
 cd /usr/src/nginx
 patch -p1 < /usr/src/nginx_dynamic_tls_records.patch || exit 1
 patch -p1 < /usr/src/use_openssl_md5_sha1.patch || exit 1
-patch -p1 < /usr/src/aws-lc-nginx.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
