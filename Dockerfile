@@ -4,7 +4,7 @@
 ##################################################
 FROM alpine:latest AS builder
 
-ARG	AWS_LC_TAG=v1.62.0 \
+ARG	AWS_LC_TAG=v1.62.1 \
 	LIBRESSL_TAG=v4.2.0 \
 	OPENSSL_TAG=openssl-3.6.0 \
 	MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
@@ -231,6 +231,7 @@ cmake \
 cd /usr/src/nginx
 patch -p1 < /usr/src/nginx_dynamic_tls_records.patch || exit 1
 patch -p1 < /usr/src/use_openssl_md5_sha1.patch || exit 1
+patch -p1 < /usr/src/aws-lc-nginx.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
