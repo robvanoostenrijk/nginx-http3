@@ -330,6 +330,10 @@ cp /etc/nginx/mime.types /scratchfs/etc/nginx/
 cp /usr/src/nginx/html/* /scratchfs/var/lib/nginx/html/
 cp /usr/sbin/nginx /scratchfs/usr/sbin
 
+mkdir -p /scratchfs/var/log/nginx
+ln -s /dev/stdout /scratchfs/var/log/nginx/access.log
+ln -s /dev/stderr /scratchfs/var/log/nginx/error.log
+
 echo "root:x:0:" > /scratchfs/etc/group
 echo "nginx:x:${GID}:" >> /scratchfs/etc/group
 
