@@ -4,10 +4,9 @@
 ##################################################
 FROM alpine:latest AS builder
 
-ARG	AWS_LC_TAG=v1.65.1 \
-	LIBRESSL_TAG=v4.2.1 \
+ARG	AWS_LC_TAG=v1.66.1 \
+	LIBRESSL_TAG=v4.1.2 \
 	OPENSSL_TAG=openssl-3.6.0 \
-	MODULE_NGINX_COOKIE_FLAG=v1.1.0 \
 	MODULE_NGINX_DEVEL_KIT=v0.3.4 \
 	MODULE_NGINX_ECHO=v0.64 \
 	MODULE_NGINX_HEADERS_MORE=v0.39 \
@@ -15,7 +14,7 @@ ARG	AWS_LC_TAG=v1.65.1 \
 	MODULE_NGINX_NJS=0.9.4 \
 	MODULE_NGINX_VTS=v0.2.4 \
 	MODULE_NGINX_ZSTD=0.1.1 \
-	NGINX=1.29.3
+	NGINX=1.29.4
 
 ARG SSL_LIBRARY=openssl
 
@@ -103,11 +102,6 @@ curl --silent --location https://github.com/cloudflare/zlib/tarball/gcc.amd64 | 
 # Module: ngx_brotli
 #
 git clone --depth=1 --recursive --shallow-submodules https://github.com/google/ngx_brotli /usr/src/ngx_brotli || exit 1
-
-#
-# Module: nginx_cookie_flag_module
-#
-curl --silent --location https://github.com/AirisX/nginx_cookie_flag_module/archive/refs/tags/${MODULE_NGINX_COOKIE_FLAG}.tar.gz | tar xz -C /usr/src --one-top-level=nginx_cookie_flag_module --strip-components=1 || exit 1
 
 #
 # Module: ngx_devel_kit
@@ -234,7 +228,7 @@ patch -p1 < /usr/src/use_openssl_md5_sha1.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
-	--build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} nginx-cookie-flag-module-${MODULE_NGINX_COOKIE_FLAG} set-misc-nginx-module-${MODULE_NGINX_MISC} ngx-http-substitutions-filter-module-latest zstd-nginx-module-${MODULE_NGINX_ZSTD} njs-${MODULE_NGINX_NJS}" \
+	--build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} set-misc-nginx-module-${MODULE_NGINX_MISC} ngx-http-substitutions-filter-module-latest zstd-nginx-module-${MODULE_NGINX_ZSTD} njs-${MODULE_NGINX_NJS}" \
 	--prefix=/var/lib/nginx \
 	--sbin-path=/usr/sbin/nginx \
 	--modules-path=/usr/lib/nginx/modules \
@@ -280,7 +274,6 @@ CXX=/usr/bin/clang++ \
 	--add-module=/usr/src/ngx_devel_kit \
 	--add-module=/usr/src/echo-nginx-module \
 	--add-module=/usr/src/headers-more-nginx-module \
-	--add-module=/usr/src/nginx_cookie_flag_module \
 	--add-module=/usr/src/nginx-module-vts \
 	--add-module=/usr/src/ngx_brotli \
 	--add-module=/usr/src/ngx_http_substitutions_filter_module \

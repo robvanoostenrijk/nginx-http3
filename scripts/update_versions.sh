@@ -12,7 +12,6 @@ cat <<- EOF > versions.env
 	AWS_LC_TAG=v$(get_latest_tag aws/aws-lc v)
 	LIBRESSL_TAG=v$(get_latest_tag libressl/portable v)
 	OPENSSL_TAG=openssl-$(get_latest_tag openssl/openssl openssl)
-	MODULE_NGINX_COOKIE_FLAG=v$(get_latest_tag AirisX/nginx_cookie_flag_module v)
 	MODULE_NGINX_DEVEL_KIT=v$(get_latest_tag vision5/ngx_devel_kit v)
 	MODULE_NGINX_ECHO=v$(get_latest_tag openresty/echo-nginx-module v)
 	MODULE_NGINX_HEADERS_MORE=v$(get_latest_tag openresty/headers-more-nginx-module v)
