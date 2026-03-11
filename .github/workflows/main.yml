@@ -14,8 +14,8 @@ jobs:
       matrix:
         library:
           - aws-lc
-          - libressl
-          - openssl
+#          - libressl
+#          - openssl
     steps:
       - name: Checkout from GitHub
         uses: actions/checkout@v4
@@ -61,33 +61,33 @@ jobs:
             dist/version.txt
           retention-days: 1
 
-  build-freebsd:
-    runs-on: ubuntu-latest
-    name: Build FreeBSD version
-    steps:
-      - name: Checkout from GitHub
-        uses: actions/checkout@v4
-      - name: Build on FreeBSD VM
-        uses: vmactions/freebsd-vm@v1
-        with:
-          release: "13.2"
-          usesh: true
-          prepare: |
-            pkg install -y bash cmake git go gtar libxml2 libxslt pcre2 rust samurai
-          run: |
-            ./build-freebsd.sh
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: nginx-freebsd
-          path: |
-            nginx-http3-aws-lc-freebsd-amd64.tar.xz
-            version.txt
-          retention-days: 1
+#  build-freebsd:
+#    runs-on: ubuntu-latest
+#    name: Build FreeBSD version
+#    steps:
+#      - name: Checkout from GitHub
+#        uses: actions/checkout@v4
+#      - name: Build on FreeBSD VM
+#        uses: vmactions/freebsd-vm@v1
+#        with:
+#          release: "13.2"
+#          usesh: true
+#          prepare: |
+#            pkg install -y bash cmake git go gtar libxml2 libxslt pcre2 rust samurai
+#          run: |
+#            ./build-freebsd.sh
+#      - name: Upload artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: nginx-freebsd
+#          path: |
+#            nginx-http3-aws-lc-freebsd-amd64.tar.xz
+#            version.txt
+#          retention-days: 1
 
   release:
     needs:
-      - build-freebsd
+#      - build-freebsd
       - build-linux-containers
     runs-on: ubuntu-latest
     name: Create Release
@@ -102,7 +102,8 @@ jobs:
         shell: bash
         run: |
           platforms=("linux-amd64" "linux-arm64")
-          libraries=("aws-lc" "libressl" "openssl")
+          #libraries=("aws-lc" "libressl" "openssl")
+          libraries=("aws-lc")
 
           git log -1 --no-merges --pretty=%B > ./release.txt
 
@@ -113,8 +114,8 @@ jobs:
             echo "    \`$(cat ./nginx-${library}/version.txt)\`" >> ./release.txt
           done
 
-          echo " - nginx-freebsd" >> ./release.txt
-          echo "    \`$(cat ./nginx-freebsd/version.txt)\`" >> ./release.txt
+          #echo " - nginx-freebsd" >> ./release.txt
+          #echo "    \`$(cat ./nginx-freebsd/version.txt)\`" >> ./release.txt
 
           echo "#### SHA256 Checksums:" >> ./release.txt
 
@@ -126,7 +127,7 @@ jobs:
             echo "" >> ./release.txt
           done
 
-          echo "    nginx-aws-lc-freebsd-amd64.tar.xz: $(sha256sum ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
+          #echo "    nginx-aws-lc-freebsd-amd64.tar.xz: $(sha256sum ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
@@ -134,8 +135,8 @@ jobs:
           files: |
             ./nginx-aws-lc/nginx-http3-aws-lc-linux-amd64.tar.xz
             ./nginx-aws-lc/nginx-http3-aws-lc-linux-arm64.tar.xz
-            ./nginx-libressl/nginx-http3-libressl-linux-amd64.tar.xz
-            ./nginx-libressl/nginx-http3-libressl-linux-arm64.tar.xz
-            ./nginx-openssl/nginx-http3-openssl-linux-amd64.tar.xz
-            ./nginx-openssl/nginx-http3-openssl-linux-arm64.tar.xz
-            ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz
+#            ./nginx-libressl/nginx-http3-libressl-linux-amd64.tar.xz
+#            ./nginx-libressl/nginx-http3-libressl-linux-arm64.tar.xz
+#            ./nginx-openssl/nginx-http3-openssl-linux-amd64.tar.xz
+#            ./nginx-openssl/nginx-http3-openssl-linux-arm64.tar.xz
+#            ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz
