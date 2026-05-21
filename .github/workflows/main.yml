@@ -7,8 +7,7 @@ on:
 
 jobs:
   build-linux-containers:
-    runs-on: ubuntu-latest
-    name: Build Linux Containers
+    name: Build ${{ matrix.library }} (${{ matrix.arch }})
     if: github.event_name == 'push'
     strategy:
       matrix:
@@ -16,11 +15,20 @@ jobs:
           - aws-lc
 #          - libressl
 #          - openssl
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+        include:
+          - os: ubuntu-latest
+            arch: amd64
+            platform: linux/amd64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            platform: linux/arm64
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout from GitHub
         uses: actions/checkout@v6
-      - name: Setup qemu
-        uses: docker/setup-qemu-action@v4
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Login to GitHub Container Registry
@@ -39,25 +47,25 @@ jobs:
           # when the branch is main, replace main with latest
           [ "$VERSION" == "main" ] && VERSION=latest
           echo "VERSION=${VERSION}-${{ matrix.library }}" >> $GITHUB_ENV
-      - name: Build and push
+      - name: Build and push (per-arch)
         uses: docker/build-push-action@v7
         with:
           build-args: SSL_LIBRARY=${{ matrix.library }}
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.platform }}
+          provenance: false
           push: true
-          tags: ghcr.io/${{ github.repository }}:${{ matrix.library }},ghcr.io/${{ github.repository }}:${{ env.VERSION }}
+          tags: ghcr.io/${{ github.repository }}:${{ matrix.library }}-${{ matrix.arch }},ghcr.io/${{ github.repository }}:${{ env.VERSION }}-${{ matrix.arch }}
       - name: Extract docker build artifacts
         shell: bash
         run: |
-          ./scripts/extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }} ${{ matrix.library }}
+          ./scripts/extract-artifacts.sh ghcr.io/${{ github.repository }} ${{ env.VERSION }}-${{ matrix.arch }} ${{ matrix.library }} ${{ matrix.platform }}
       - name: Upload artifacts 
         uses: actions/upload-artifact@v7
         with:
-          name: nginx-${{ matrix.library }}
+          name: nginx-${{ matrix.library }}-${{ matrix.arch }}
           path: |
-            dist/nginx-http3-${{ matrix.library }}-linux-amd64.tar.xz
-            dist/nginx-http3-${{ matrix.library }}-linux-arm64.tar.xz
+            dist/nginx-http3-${{ matrix.library }}-linux-${{ matrix.arch }}.tar.xz
             dist/version.txt
           retention-days: 1
 
@@ -85,10 +93,51 @@ jobs:
 #            version.txt
 #          retention-days: 1
 
+  manifest:
+    needs:
+      - build-linux-containers
+    runs-on: ubuntu-latest
+    name: Create Multi-Arch Manifest
+    strategy:
+      matrix:
+        library:
+          - aws-lc
+#          - libressl
+#          - openssl
+    steps:
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Determine Image Version
+        run: |
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          [ "$VERSION" == "main" ] && VERSION=latest
+          echo "VERSION=${VERSION}-${{ matrix.library }}" >> $GITHUB_ENV
+      - name: Create and push multi-arch manifest
+        run: |
+          IMAGE=ghcr.io/${{ github.repository }}
+
+          # Create manifest for library tag (e.g. :aws-lc)
+          docker manifest create ${IMAGE}:${{ matrix.library }} \
+            ${IMAGE}:${{ matrix.library }}-amd64 \
+            ${IMAGE}:${{ matrix.library }}-arm64
+          docker manifest push ${IMAGE}:${{ matrix.library }}
+
+          # Create manifest for versioned tag (e.g. :1.0.0-aws-lc)
+          docker manifest create ${IMAGE}:${{ env.VERSION }} \
+            ${IMAGE}:${{ env.VERSION }}-amd64 \
+            ${IMAGE}:${{ env.VERSION }}-arm64
+          docker manifest push ${IMAGE}:${{ env.VERSION }}
+
   release:
     needs:
 #      - build-freebsd
       - build-linux-containers
+      - manifest
     runs-on: ubuntu-latest
     name: Create Release
     steps:
@@ -97,6 +146,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
+          merge-multiple: true
           pattern: nginx-*
       - name: Release Text
         shell: bash
@@ -111,7 +161,7 @@ jobs:
 
           for library in ${libraries[@]}; do
             echo " - nginx-${library}" >> ./release.txt
-            echo "    \`$(cat ./nginx-${library}/version.txt)\`" >> ./release.txt
+            echo "    \`$(cat ./version.txt)\`" >> ./release.txt
           done
 
           #echo " - nginx-freebsd" >> ./release.txt
@@ -121,7 +171,7 @@ jobs:
 
           for library in ${libraries[@]}; do
             for platform in ${platforms[@]}; do
-              echo "    nginx-${library}-${platform}.tar.xz: $(sha256sum ./nginx-${library}/nginx-http3-${library}-${platform}.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
+              echo "    nginx-${library}-${platform}.tar.xz: $(sha256sum ./nginx-http3-${library}-${platform}.tar.xz | cut -d ' ' -f 1)" >> ./release.txt
             done
 
             echo "" >> ./release.txt
@@ -133,8 +183,8 @@ jobs:
         with:
           body_path: ./release.txt
           files: |
-            ./nginx-aws-lc/nginx-http3-aws-lc-linux-amd64.tar.xz
-            ./nginx-aws-lc/nginx-http3-aws-lc-linux-arm64.tar.xz
+            ./nginx-http3-aws-lc-linux-amd64.tar.xz
+            ./nginx-http3-aws-lc-linux-arm64.tar.xz
 #            ./nginx-libressl/nginx-http3-libressl-linux-amd64.tar.xz
 #            ./nginx-libressl/nginx-http3-libressl-linux-arm64.tar.xz
 #            ./nginx-openssl/nginx-http3-openssl-linux-amd64.tar.xz
