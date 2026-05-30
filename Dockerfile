@@ -4,8 +4,8 @@
 ##################################################
 FROM alpine:latest AS builder
 
-ARG	AWS_LC_TAG=v1.73.0 \
-	LIBRESSL_TAG=v4.3.1 \
+ARG	AWS_LC_TAG=v5.0.0 \
+	LIBRESSL_TAG=v4.3.2 \
 	OPENSSL_TAG=openssl-4.0.0 \
 	MODULE_NGINX_DEVEL_KIT=v0.3.4 \
 	MODULE_NGINX_ECHO=v0.64 \
@@ -14,7 +14,7 @@ ARG	AWS_LC_TAG=v1.73.0 \
 	MODULE_NGINX_NJS=0.9.9 \
 	MODULE_NGINX_VTS=v0.2.5 \
 	MODULE_NGINX_ZSTD=0.1.1 \
-	NGINX=1.31.0
+	NGINX=1.31.1
 
 ARG SSL_LIBRARY=openssl
 
