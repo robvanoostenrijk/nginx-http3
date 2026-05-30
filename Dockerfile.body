@@ -249,6 +249,8 @@ CXX=/usr/bin/clang++ \
 	--with-pcre-opt="-O3" \
 	--with-poll_module \
 	--with-select_module \
+	--with-stream \
+	--with-stream_ssl_preread_module \
 	--with-threads \
 	--with-zlib-asm=CPU \
 	--with-zlib-opt="-O3" \
