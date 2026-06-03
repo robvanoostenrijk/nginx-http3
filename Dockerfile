@@ -134,6 +134,11 @@ curl --silent --location https://github.com/vozlt/nginx-module-vts/archive/refs/
 curl --silent --location https://github.com/yaoweibin/ngx_http_substitutions_filter_module/tarball/master | tar xz -C /usr/src --one-top-level=ngx_http_substitutions_filter_module --strip-components=1 || exit 1
 
 #
+# Module: https://github.com/WoozyMasta/nginx-rtmp-module
+#
+curl --silent --location https://github.com/WoozyMasta/nginx-rtmp-module/tarball/master | tar xz -C /usr/src --one-top-level=nginx-rtmp-module --strip-components=1 || exit 1
+
+#
 # Module: zstd-nginx-module
 #
 curl --silent --location https://github.com/tokers/zstd-nginx-module/archive/refs/tags/${MODULE_NGINX_ZSTD}.tar.gz | tar xz -C /usr/src --one-top-level=zstd-nginx-module --strip-components=1 || exit 1
@@ -228,7 +233,7 @@ patch -p1 < /usr/src/use_openssl_md5_sha1.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
-	--build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} set-misc-nginx-module-${MODULE_NGINX_MISC} ngx-http-substitutions-filter-module-latest zstd-nginx-module-${MODULE_NGINX_ZSTD} njs-${MODULE_NGINX_NJS}" \
+	--build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} set-misc-nginx-module-${MODULE_NGINX_MISC} nginx-rtmp-module-latest ngx-http-substitutions-filter-module-latest zstd-nginx-module-${MODULE_NGINX_ZSTD} njs-${MODULE_NGINX_NJS}" \
 	--prefix=/var/lib/nginx \
 	--sbin-path=/usr/sbin/nginx \
 	--modules-path=/usr/lib/nginx/modules \
@@ -277,6 +282,7 @@ CXX=/usr/bin/clang++ \
 	--add-module=/usr/src/echo-nginx-module \
 	--add-module=/usr/src/headers-more-nginx-module \
 	--add-module=/usr/src/nginx-module-vts \
+	--add-module=/usr/src/nginx-rtmp-module \
 	--add-module=/usr/src/ngx_brotli \
 	--add-module=/usr/src/ngx_http_substitutions_filter_module \
 	--add-module=/usr/src/zstd-nginx-module \
