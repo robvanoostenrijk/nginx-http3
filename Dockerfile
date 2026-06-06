@@ -40,6 +40,8 @@ apk add --no-cache --virtual .build-deps \
 	cmake \
 	curl \
 	file \
+	geoip-dev \
+	geoip-static \
 	git \
 	go \
 	libtool \
@@ -254,6 +256,7 @@ CXX=/usr/bin/clang++ \
 	--with-http_auth_request_module \
 	--with-http_dav_module \
 	--with-http_degradation_module \
+	--with-http_geoip_module \
 	--with-http_gunzip_module \
 	--with-http_gzip_static_module \
 	--with-http_random_index_module \
@@ -273,6 +276,7 @@ CXX=/usr/bin/clang++ \
 	--with-poll_module \
 	--with-select_module \
 	--with-stream \
+	--with-stream_geoip_module \
 	--with-stream_ssl_preread_module \
 	--with-threads \
 	--with-zlib-asm=CPU \
