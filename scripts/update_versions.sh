@@ -14,6 +14,8 @@ cat <<- EOF > versions.env
 	OPENSSL_TAG=openssl-$(get_latest_tag openssl/openssl openssl)
 	MODULE_NGINX_DEVEL_KIT=v$(get_latest_tag vision5/ngx_devel_kit v)
 	MODULE_NGINX_ECHO=v$(get_latest_tag openresty/echo-nginx-module v)
+	MODULE_NGINX_GEOIP2=$(get_latest_tag leev/ngx_http_geoip2_module)
+	MODULE_NGINX_FLV=v$(get_latest_tag winshining/nginx-http-flv-module v)
 	MODULE_NGINX_HEADERS_MORE=v$(get_latest_tag openresty/headers-more-nginx-module v)
 	MODULE_NGINX_MISC=v$(get_latest_tag openresty/set-misc-nginx-module v)
 	MODULE_NGINX_NJS=$(get_latest_tag nginx/njs)

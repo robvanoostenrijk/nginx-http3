@@ -6,15 +6,17 @@ FROM alpine:latest AS builder
 
 ARG	AWS_LC_TAG=v5.0.0 \
 	LIBRESSL_TAG=v4.3.2 \
-	OPENSSL_TAG=openssl-4.0.0 \
-	MODULE_NGINX_DEVEL_KIT=v0.3.3 \
-	MODULE_NGINX_ECHO=v0.64 \
-	MODULE_NGINX_HEADERS_MORE=v0.39 \
-	MODULE_NGINX_MISC=v0.33 \
-	MODULE_NGINX_NJS=0.9.9 \
+	OPENSSL_TAG=openssl-4.0.1 \
+	MODULE_NGINX_DEVEL_KIT=v0.3.4 \
+	MODULE_NGINX_ECHO=v0.65 \
+	MODULE_NGINX_GEOIP2=3.4 \
+	MODULE_NGINX_FLV=v1.2.13 \
+	MODULE_NGINX_HEADERS_MORE=v0.40 \
+	MODULE_NGINX_MISC=v0.34 \
+	MODULE_NGINX_NJS=1.0.0 \
 	MODULE_NGINX_VTS=v0.2.5 \
 	MODULE_NGINX_ZSTD=0.1.1 \
-	NGINX=1.31.1
+	NGINX=1.31.2
 
 ARG SSL_LIBRARY=openssl
 
@@ -22,7 +24,6 @@ ARG UID=1000
 ARG GID=1000
 
 COPY --link ["patches/nginx_dynamic_tls_records.patch", "/usr/src/nginx_dynamic_tls_records.patch"]
-COPY --link ["patches/use_openssl_md5_sha1.patch", "/usr/src/use_openssl_md5_sha1.patch"]
 COPY --link ["scratchfs", "/scratchfs"]
 
 RUN <<EOF
@@ -138,12 +139,12 @@ curl --silent --location https://github.com/yaoweibin/ngx_http_substitutions_fil
 #
 # Module: nginx-http-flv-module
 #
-curl --silent --location https://github.com/winshining/nginx-http-flv-module/tarball/master | tar xz -C /usr/src --one-top-level=nginx-http-flv-module --strip-components=1 || exit 1
+curl --silent --location https://github.com/winshining/nginx-http-flv-module/archive/refs/tags/${MODULE_NGINX_FLV}.tar.gz | tar xz -C /usr/src --one-top-level=nginx-http-flv-module --strip-components=1 || exit 1
 
 #
 # Module: ngx_http_geoip2_module
 #
-curl --silent --location https://github.com/leev/ngx_http_geoip2_module/tarball/master | tar xz -C /usr/src --one-top-level=ngx_http_geoip2_module --strip-components=1 || exit 1
+curl --silent --location https://github.com/leev/ngx_http_geoip2_module/archive/refs/tags/${MODULE_NGINX_GEOIP2}.tar.gz  | tar xz -C /usr/src --one-top-level=ngx_http_geoip2_module --strip-components=1 || exit 1
 
 #
 # Module: zstd-nginx-module
@@ -236,11 +237,10 @@ cmake \
 #
 cd /usr/src/nginx
 patch -p1 < /usr/src/nginx_dynamic_tls_records.patch || exit 1
-patch -p1 < /usr/src/use_openssl_md5_sha1.patch || exit 1
 CC=/usr/bin/clang \
 CXX=/usr/bin/clang++ \
 ./configure \
-	--build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} set-misc-nginx-module-${MODULE_NGINX_MISC} nginx-http-flv-module-latest ngx_http_geoip2_module-latest ngx-http-substitutions-filter-module-latest zstd-nginx-module-${MODULE_NGINX_ZSTD} njs-${MODULE_NGINX_NJS}" \
+	--build="${SSL_COMMIT} ngx_brotli-$(git --git-dir=/usr/src/ngx_brotli/.git rev-parse --short HEAD) ngx-devel-kit-${MODULE_NGINX_DEVEL_KIT} headers-more-nginx-module-${MODULE_NGINX_HEADERS_MORE} echo-nginx-module-${MODULE_NGINX_ECHO} nginx-module-vts-${MODULE_NGINX_VTS} set-misc-nginx-module-${MODULE_NGINX_MISC} nginx-http-flv-module-${MODULE_NGINX_FLV} ngx_http_geoip2_module-${MODULE_NGINX_GEOIP2} ngx-http-substitutions-filter-module-latest zstd-nginx-module-${MODULE_NGINX_ZSTD} njs-${MODULE_NGINX_NJS}" \
 	--prefix=/var/lib/nginx \
 	--sbin-path=/usr/sbin/nginx \
 	--modules-path=/usr/lib/nginx/modules \
