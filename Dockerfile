@@ -4,9 +4,9 @@
 ##################################################
 FROM alpine:latest AS builder
 
-ARG	AWS_LC_TAG=v5.8.0 \
+ARG	AWS_LC_TAG=v5.11.0 \
 	LIBRESSL_TAG=v4.3.2 \
-	OPENSSL_TAG=openssl-4.0.2 \
+	OPENSSL_TAG=openssl-4.1.01 \
 	MODULE_NGINX_DEVEL_KIT=v0.3.4 \
 	MODULE_NGINX_ECHO=v0.65 \
 	MODULE_NGINX_GEOIP2=3.4 \
@@ -16,7 +16,7 @@ ARG	AWS_LC_TAG=v5.8.0 \
 	MODULE_NGINX_NJS=1.0.1 \
 	MODULE_NGINX_VTS=v0.2.7 \
 	MODULE_NGINX_ZSTD=0.1.1 \
-	NGINX=1.31.5
+	NGINX=1.31.6
 
 ARG SSL_LIBRARY=openssl
 
@@ -201,6 +201,7 @@ cd /usr/src/aws-lc/build
 	CC=clang CXX=clang++ cmake \
 		-GNinja \
 		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_TESTING=OFF \
 		-DCMAKE_INSTALL_LIBDIR=lib \
 		-DCMAKE_INSTALL_PREFIX=../install \
 		..

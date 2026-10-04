@@ -181,6 +181,7 @@ cd /usr/src/aws-lc/build
 	CC=clang CXX=clang++ cmake \
 		-GNinja \
 		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_TESTING=OFF \
 		-DCMAKE_INSTALL_LIBDIR=lib \
 		-DCMAKE_INSTALL_PREFIX=../install \
 		..
