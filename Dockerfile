@@ -18,6 +18,7 @@ ARG	AWS_LC_TAG=v5.11.0 \
 	MODULE_NGINX_ZSTD=0.1.1 \
 	NGINX=1.31.7
 
+ARG ARCH_MARCH=native
 ARG SSL_LIBRARY=openssl
 
 ARG UID=1000
@@ -224,8 +225,8 @@ mkdir out && cd out
 CC=clang cmake \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_SHARED_LIBS=OFF \
-	-DCMAKE_C_FLAGS="-Ofast -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects" \
-	-DCMAKE_CXX_FLAGS="-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects" \
+	-DCMAKE_C_FLAGS="-Ofast -march=${ARCH_MARCH} -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects" \
+	-DCMAKE_CXX_FLAGS="-Ofast -m64 -march=${ARCH_MARCH} -flto -funroll-loops -ffunction-sections -fdata-sections -ffat-lto-objects" \
 	-DCMAKE_INSTALL_PREFIX=./installed \
 	..
 cmake \
