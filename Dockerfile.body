@@ -271,7 +271,6 @@ CXX=/usr/bin/clang++ \
 	--add-module=/usr/src/echo-nginx-module \
 	--add-module=/usr/src/headers-more-nginx-module \
 	--add-module=/usr/src/nginx-module-vts \
-	--add-module=/usr/src/nginx-http-flv-module \
 	--add-module=/usr/src/ngx_brotli \
 	--add-module=/usr/src/ngx_http_geoip2_module \
 	--add-module=/usr/src/ngx_http_substitutions_filter_module \
