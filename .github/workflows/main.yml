@@ -13,8 +13,9 @@ jobs:
       matrix:
         library:
           - aws-lc
-#          - libressl
-#          - openssl
+          - libressl
+          - openssl
+          - wolfssl
         os:
           - ubuntu-latest
           - ubuntu-24.04-arm
@@ -106,8 +107,9 @@ jobs:
       matrix:
         library:
           - aws-lc
-#          - libressl
-#          - openssl
+          - libressl
+          - openssl
+          - wolfssl
     steps:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
@@ -156,8 +158,7 @@ jobs:
         shell: bash
         run: |
           platforms=("linux-amd64" "linux-arm64")
-          #libraries=("aws-lc" "libressl" "openssl")
-          libraries=("aws-lc")
+          libraries=("aws-lc" "libressl" "openssl" "wolfssl")
 
           git log -1 --no-merges --pretty=%B > ./release.txt
 
@@ -189,11 +190,11 @@ jobs:
           files: |
             ./nginx-http3-aws-lc-linux-amd64.tar.xz
             ./nginx-http3-aws-lc-linux-arm64.tar.xz
-#            ./nginx-libressl/nginx-http3-libressl-linux-amd64.tar.xz
-#            ./nginx-libressl/nginx-http3-libressl-linux-arm64.tar.xz
-#            ./nginx-openssl/nginx-http3-openssl-linux-amd64.tar.xz
-#            ./nginx-openssl/nginx-http3-openssl-linux-arm64.tar.xz
-#            ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz
+            ./nginx-libressl/nginx-http3-libressl-linux-amd64.tar.xz
+            ./nginx-libressl/nginx-http3-libressl-linux-arm64.tar.xz
+            ./nginx-openssl/nginx-http3-openssl-linux-amd64.tar.xz
+            ./nginx-openssl/nginx-http3-openssl-linux-arm64.tar.xz
+            ./nginx-freebsd/nginx-http3-aws-lc-freebsd-amd64.tar.xz
       - name: Remove old packages
         uses: actions/delete-package-versions@v5
         with:

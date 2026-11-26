@@ -1,0 +1,68 @@
+--- a/external/njs_webcrypto_module.c
++++ b/external/njs_webcrypto_module.c
+@@ -3629,11 +3629,33 @@
+         }
+     }
+ 
++#ifdef WOLFSSL_NGINX
++    {
++        const EC_GROUP  *group;
++        EC_POINT        *pub;
++
++        group = EC_KEY_get0_group(ec);
++        pub = (group != NULL) ? EC_POINT_new(group) : NULL;
++        if (pub == NULL
++            || !EC_POINT_set_affine_coordinates_GFp(group, pub, x_bn, y_bn,
++                                                    NULL)
++            || !EC_KEY_set_public_key(ec, pub))
++        {
++            EC_POINT_free(pub);
++            njs_webcrypto_error(vm,
++                                "EC_KEY_set_public_key_affine_coordinates() "
++                                "failed");
++            goto fail;
++        }
++        EC_POINT_free(pub);
++    }
++#else
+     if (!EC_KEY_set_public_key_affine_coordinates(ec, x_bn, y_bn)) {
+         njs_webcrypto_error(vm, "EC_KEY_set_public_key_affine_coordinates() "
+                             "failed");
+         goto fail;
+     }
++#endif
+ 
+     BN_free(x_bn);
+     x_bn = NULL;
+@@ -4988,13 +5010,31 @@
+             return NJS_ERROR;
+         }
+ 
++#ifdef WOLFSSL_NGINX
++        {
++            int      der_len;
++            u_char  *der = NULL;
++
++            der_len = i2d_PKCS8_PRIV_KEY_INFO(pkcs8, &der);
++            if (der_len <= 0 || BIO_write(bio, der, der_len) != der_len) {
++                OPENSSL_free(der);
++                BIO_free(bio);
++                PKCS8_PRIV_KEY_INFO_free(pkcs8);
++                njs_webcrypto_error(vm,
++                                    "i2d_PKCS8_PRIV_KEY_INFO_bio() failed");
++                return NJS_ERROR;
++            }
++            OPENSSL_free(der);
++        }
++#else
+         if (!i2d_PKCS8_PRIV_KEY_INFO_bio(bio, pkcs8)) {
+             BIO_free(bio);
+             PKCS8_PRIV_KEY_INFO_free(pkcs8);
+             njs_webcrypto_error(vm,
+                                 "i2d_PKCS8_PRIV_KEY_INFO_bio() failed");
+             return NJS_ERROR;
+         }
++#endif
+ 
+         BIO_get_mem_ptr(bio, &mem);
+ 

@@ -12,6 +12,7 @@ cat <<- EOF > versions.env
 	AWS_LC_TAG=v$(get_latest_tag aws/aws-lc v)
 	LIBRESSL_TAG=v$(get_latest_tag libressl/portable v)
 	OPENSSL_TAG=openssl-$(get_latest_tag openssl/openssl openssl)
+	WOLFSSL_TAG=v$(get_latest_tag wolfSSL/wolfssl v)
 	MODULE_NGINX_DEVEL_KIT=v$(get_latest_tag vision5/ngx_devel_kit v)
 	MODULE_NGINX_ECHO=v$(get_latest_tag openresty/echo-nginx-module v)
 	MODULE_NGINX_GEOIP2=$(get_latest_tag leev/ngx_http_geoip2_module)
@@ -22,4 +23,5 @@ cat <<- EOF > versions.env
 	MODULE_NGINX_VTS=v$(get_latest_tag vozlt/nginx-module-vts v)
 	MODULE_NGINX_ZSTD=$(get_latest_tag tokers/zstd-nginx-module)
 	NGINX=$(get_latest_tag nginx/nginx release)
+	ZLIB_NG_TAG=$(get_latest_tag zlib-ng/zlib-ng)
 EOF
